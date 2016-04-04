@@ -1,2 +1,5 @@
-# DemosRed
-some demos for Red lang
+# Demos Red
+
+some demos for [Red language](http://www.red-lang.org/)
+
+
