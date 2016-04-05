@@ -1,13 +1,28 @@
 # Demos Red
 
-some demos for [Red language](http://www.red-lang.org/)
+#### some demos for [**Red language**](http://www.red-lang.org/)    
 
-### Test simpleDraw code from GIT 
+**WARNING** presently [**Red GUI**](http://www.red-lang.org/2016/03/060-red-gui-system.html) run only on Windows
 
-First install last [**RED**](http://www.red-lang.org/p/download.html) release *(>= 0.6.0)* 
+### Test demos from GIT 
 
-Start REPL then type: 
-
+First install last [**RED build**](http://www.red-lang.org/p/download.html) release > 0.6.0 *use last build*    
+Start REPL then type:    
 ```do read https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleDraw/demosRunner.red```
 
+or if you want a gui   
+```do read https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleDraw/demosGuiRunner.red```
 
+### Why 
+
+I am leaning Red and those demos help me on this process *\(and may help you \:\-\) \)*
+
+you can copy and paste the code directly in the REPL
+
+## Binarie 
+
+only one demo exe to download in winexe repository *\( some browser doen't allow these download \)* 
+
+### contrib 
+
+**RenaudG** for *runners *
