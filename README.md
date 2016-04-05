@@ -8,10 +8,10 @@
 
 First install last [**RED build**](http://www.red-lang.org/p/download.html) release > 0.6.0 *use last build*    
 Start REPL then type:    
-```do read https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleDraw/demosRunner.red```
+```do read https://raw.githubusercontent.com/nodrygo/DemosRed/master/demosRunner.red```
 
 or if you want a gui   
-```do read https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleDraw/demosGuiRunner.red```
+```do read https://raw.githubusercontent.com/nodrygo/DemosRed/master/demosGuiRunner.red```
 
 ### Why 
 
