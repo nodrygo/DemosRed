@@ -3,7 +3,7 @@ Red [title: "demo Gui runner"
      goal: "provide a GUI runner for demos"
      needs: 'view]
 
-samples: load %https://raw.githubusercontent.com/nodrygo/DemosRed/master/demopath.red 
+samples: load https://raw.githubusercontent.com/nodrygo/DemosRed/master/demopath.red
 
 choose: func [n] [
     x: samples/(2 * n)
