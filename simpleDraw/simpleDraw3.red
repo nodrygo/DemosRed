@@ -1,6 +1,6 @@
-Red [title: "simpleDraw2"
+Red [title: "simpleDraw3"
      authors: "renaudG/nodrygo  " 
-     goal: "draw with lines connected"
+     goal: "draw with lines connected and color selector"
      needs: 'view]
 
 to-color: function [r g b][
