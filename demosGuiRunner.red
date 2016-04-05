@@ -3,10 +3,7 @@ Red [title: "demo Gui runner"
      goal: "provide a GUI runner for demos"
      needs: 'view]
 
-samples: [
-    "Simple drawing with circles"  https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleDraw/simpleDraw1.red
-    "Simple line drawing"          https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleDraw/simpleDraw2.red
-]
+samples: load %https://raw.githubusercontent.com/nodrygo/DemosRed/master/demopath.red 
 
 choose: func [n] [
     x: samples/(2 * n)

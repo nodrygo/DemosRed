@@ -1,9 +1,6 @@
 Red []
 ;-- as suggested and written by renaudG
-samples: [
-    1  "Simple drawing with circles"  https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleDraw/simpleDraw1.red
-    2  "Simple line drawing"          https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleDraw/simpleDraw2.red
-]
+samples: load %https://raw.githubusercontent.com/nodrygo/DemosRed/master/demopath.red 
 
 forever [
     foreach [n title url] samples [ print ["- " n ": " title] ]
