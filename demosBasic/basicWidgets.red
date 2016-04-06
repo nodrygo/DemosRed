@@ -1,16 +1,16 @@
 Red [
-        Title: "Basic Red GUI Widgets"
-        Purpose: :  "show simplicity of very few widgets"
-        File:   %basicWidgets.red
-        Tabs:   4
-        Rights: ""
+        Title:   "Basic Red GUI Widgets"
+        Purpose: "show simplicity of very few widgets"
+        File:    %basicWidgets.red
+        Tabs:    4
+        Rights:  ""
         License: {
-        Distributed under the Boost Software License, Version 1.0.
-        See https://github.com/red/red/blob/master/BSL-License.txt
+            Distributed under the Boost Software License, Version 1.0.
+            See https://github.com/red/red/blob/master/BSL-License.txt
         }
-        Needs: 'view
+        Needs:   'view
 ]
-]
+
 view [
     img: image loose http://static.red-lang.org/red-logo.png 
     t: text "LOGO RED" button "Click Me" [t/text: "LOGO RED is moveable"] return
