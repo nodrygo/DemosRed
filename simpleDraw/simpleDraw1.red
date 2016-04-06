@@ -1,7 +1,16 @@
-Red [title: "simpleDraw1"
-     authors: "renaudG/nodrygo  " 
-     goal: "draw with list of points"
-     needs: 'view]
+Red [
+        Title: "simpleDraw1"
+        Author: "renaudG/nodrygo  " 
+        Purpose: "draw with list of points"
+        File:   %simpleDraw1.red
+        Tabs:   4
+        Rights: ""
+        License: {
+        Distributed under the Boost Software License, Version 1.0.
+        See https://github.com/red/red/blob/master/BSL-License.txt
+    }
+        Needs: 'view
+]
 
 entities: object [
     size: 5

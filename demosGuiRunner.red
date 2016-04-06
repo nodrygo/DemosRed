@@ -1,7 +1,16 @@
-Red [title: "demo Gui runner"
-     authors: "renaudG" 
-     goal: "provide a GUI runner for demos"
-     needs: 'view]
+Red [
+        Title: "demo Gui runner"
+        Authors: "renaudG" 
+        Goal: "provide a GUI runner for demos"
+        File:   %simpleDraw4.red
+        Tabs:   4
+        Rights: ""
+        License: {
+        Distributed under the Boost Software License, Version 1.0.
+        See https://github.com/red/red/blob/master/BSL-License.txt
+    }
+        needs: 'view
+]
 
 samples: load https://raw.githubusercontent.com/nodrygo/DemosRed/master/demopath.red
 

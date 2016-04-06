@@ -1,7 +1,16 @@
-Red [title: "simpleDraw3"
-     authors: "renaudG/nodrygo  " 
-     goal: "draw with lines connected and color selector"
-     needs: 'view]
+Red [
+        Title: "simpleDraw3"
+        Author: "renaudG/nodrygo  " 
+        Goal: "draw with lines connected and color selector"
+        File:   %simpleDraw3.red
+        Tabs:   4
+        Rights: ""
+        License: {
+        Distributed under the Boost Software License, Version 1.0.
+        See https://github.com/red/red/blob/master/BSL-License.txt
+        }
+        needs: 'view
+]
 
 to-color: function [r g b][
     color: 0.0.0

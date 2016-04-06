@@ -1,7 +1,16 @@
-Red [title: "simpleDraw2"
-     authors: "renaudG/nodrygo  " 
-     goal: "draw with lines connected"
-     needs: 'view]
+Red [
+        Title: "simpleDraw2"
+        Author: "renaudG/nodrygo  " 
+        goal: "draw with lines connected"
+        File:   %simpleDraw2.red
+        Tabs:   4
+        Rights: ""
+        License: {
+        Distributed under the Boost Software License, Version 1.0.
+        See https://github.com/red/red/blob/master/BSL-License.txt
+    }
+        needs: 'view
+]
 
 entities: object [
     size: 1
