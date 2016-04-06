@@ -1,12 +1,19 @@
 Red [
-    title:   "simpleDraw1"
-    authors: "nodrygo/renaudG" 
-    goal:    "draw with list of points"
+    Title:   "simpleDraw1"
+    Authors: "nodrygo/renaudG" 
+    Purpose: "Draw with list of points"
+    File:    %simpleDraw.red
+    Tabs:    4
+    Rights: ""
+    License: {
+        Distributed under the Boost Software License, Version 1.0.
+        See https://github.com/red/red/blob/master/BSL-License.txt
+    }
     needs:   'view
 ]
 
 entities: object [
-"Holds (and allow operations on) the drawing as a list of dots"
+    "Holds (and allow operations on) the drawing as a list of dots"
     size: 5
     elist:   [pen red fill-pen red]
     add:     function [ pos ] [ append elist compose [circle (pos) (size)]]
