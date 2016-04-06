@@ -88,7 +88,7 @@ colorpopup: function [
         ] return 
         button "OK" 100     [ unview lcolor: to-color LSR/data LSG/data LSB/data ]
         button "Cancel" 100 [ unview ]
-        do [LCL/size/2: GB/size/2]
+        do [LCL/size/2: GB/size/2 LCL/color: lcolor]
     ][modal popup]
     lcolor
 ]
