@@ -20,6 +20,12 @@ to-color: function [r g b][
     c
 ]
 
+loadimg: [imgname] [
+    either exist-file? append [%images/ imgname]
+                              [load append  https://raw.githubusercontent.com/nodrygo/DemosRed/master/ 'images/  imgname]
+ 
+]
+
 to-percents: function [
     "Convert a color tuple to percent values"
     c [tuple!] "Color tuple"
@@ -47,7 +53,7 @@ entities: object [
                                      append elist compose [(pos)]
                                 ]
                               penstatus: 'down
-                              print ["ENTITIES LIST:" elist]
+                              ;print ["ENTITIES LIST:" elist]
                              ]
     newline:    func [ pos ] [ 
                             penstatus: 'down 
