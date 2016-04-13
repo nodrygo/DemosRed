@@ -2,9 +2,20 @@ Red [ ]
 
 
 distance: function [p1 [pair!] p2 [pair!] /return [integer!]][
-   x: absolute p1/x - p2/x y: absolute p1/y - p2/y
-   square-root ((x * x) + (y * y)) 
+   x:  p1/x - p2/x 
+   y:  p1/y - p2/y
+   to integer! square-root ((x * x) + (y * y)) 
 ]
+angle: function [p1 [pair!] p2 [pair!] /return [integer!]][
+   dxy:  p2 -  p1 
+   to integer!  (arctangent2 dxy/y  dxy/x) * (180 / pi) 
+]
+
+;angle 100x100 200x100
+;angle 100x100 100x0
+;angle 100x100 100x200
+;angle 100x100 -100x100
+;angle 100x100 100x-100 
 
 to-color: function [r g b][
     c: 0.0.0
