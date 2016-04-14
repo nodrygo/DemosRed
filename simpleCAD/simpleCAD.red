@@ -11,21 +11,21 @@ Red [
 ]
 
 comment {
-    the goal is to test both increase my Red dev skill and see RED capacities    
-    need multiple file ??    
+    the goal: both try to increase my Red dev skill and see RED capacities       
     ENTITIES list of elements to draw     ID is elem pos in list 
     deleted elem should become 'none to keep the order
-    two DRAW area     
+    tree DRAW area     
        * 1 show entities in the back 
-       * 2 show in front selection area with drag/drop 
+       * 2 show the grid
+       * 3 show in front selection area with drag/drop 
     tree TOOLBAR
        * 1 entities selection (LINE ARC .....)
-       * 2 selector mode (clear unique rectangle-exclusive rectangle-full-inclusivle)
+       * 2 selector mode (none=entittie creation point rectangle-exclusive rectangle-full-inclusivle)
        * 3 actions on selection MOVE DELETE 
     GRID show/hide/set grid 
-    COLOR set back/front color
+    PEN set back/front color size ...
     LAYER ?? not presently
-    SNAP ?? not presently 
+    SNAP ??  not presently 
 }
 
 ; #include %commonlib.red
@@ -98,6 +98,8 @@ entcircle:   [circle 0x0 1]
 entbox:      [box 0x0 0x0]
 entarc:      [arc 0x0 1 0 180]
 entarclosed: [arc 0x0 1 0 180 closed]
+entellipse:     [ellipse 0x0 1x1]
+entclosedellipse: [ellipse 0x0 1x1 closed]
 
 dragent: context [
     elist: []
@@ -133,6 +135,8 @@ dragent: context [
                                              ][pos]
                                     addentpt nbclick + 1 newval
                                     ]
+                        'ellipse        [addentpt nbclick + 1 pos]
+                        'closedellipse  [addentpt nbclick + 1 pos]
                       ]
                     probe tmplist
                     updateelist
@@ -146,6 +150,8 @@ dragent: context [
                   'box    [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entbox)]]    ] 
                   'arc    [ nbpte: 4 append tmplist compose/deep [[(ecolor)][(entarc)]]    ]
                   'arclosed    [ nbpte: 4 append tmplist compose/deep [[(ecolor)][(entarclosed)]] current/tool: 'arc    ]
+                  'ellipse       [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entellipse)]]    ]
+                  'closedellipse [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entclosedellipse)]]    ]
                   ]
                 addentpt nbclick pos
                 probe tmplist
@@ -165,11 +171,13 @@ dragent: context [
 tools-bar: [
     group-box "TOOLS"  [ 
     return
-    radio "line"  data true  [current/tool: 'line] return
-    radio "box"     [current/tool: 'box] return
-    radio "circle"  [current/tool: 'circle] return
-    radio "arc"    [current/tool: 'arc] return
-    radio "closed arc"    [current/tool: 'arclosed] 
+    radio "line"  50x20 data true  [current/tool: 'line] return
+    radio "box"   50x20  [current/tool: 'box] return
+    radio "circle" 50x20 [current/tool: 'circle] return
+    radio "arc" 50x20   [current/tool: 'arc]
+    radio "closed" 50x20   [current/tool: 'arclosed]  return
+    radio "ellipse" 50x20   [current/tool: 'ellipse] 
+    radio "closed" 50x20   [current/tool: 'closedellipse] 
     ]
 ]
 
@@ -258,9 +266,9 @@ mainlayer: compose/deep [
        ]
     drpanel: panel  [
 
-         at 10x10  basebg: base 500x480        white  all-over draw entities/drlist 
-         at 10x10  basegrid: base 500x480 transwhite  all-over draw entities/drgrid
-         at 10x10  basefg: base 500x480   transwhite  all-over draw dragent/elist 
+         at 0x10  basebg: base   300x480        white  all-over draw entities/drlist 
+         at 0x10  basegrid: base 300x480 transwhite  all-over draw entities/drgrid
+         at 0x10  basefg: base   300x480   transwhite  all-over draw dragent/elist 
      ]                        
 ]
 
@@ -281,7 +289,7 @@ drpanel/actors:  context [
                 ]
 
 setdrawpanel: func [][
-     x: mainwin/size/x -  300
+     x: mainwin/size/x -  310
      y: mainwin/size/y -  20 
      current/winx: x
      current/winy: y
@@ -301,9 +309,10 @@ mainwin/actors: context [
                          if event/picked = 'open  [attempt [entities/drlist: load %dessin.red] ]
                          if event/picked = 'save  [save %dessin.red entities/drlist alertPOPUP "DESSIN.RED SAVED"]
                          if event/picked = 'about [alertPOPUP "RED SIMPLE DEMO CAD "]
+                         if event/picket = 'exit [quit]
                 ]
-                on-resize: func  [face [object!] evt [event!]] [ either mainwin/size < 980x568 
-                                                                        [mainwin/size: 980x568
+                on-resize: func  [face [object!] evt [event!]] [ either mainwin/size < 1024x568 
+                                                                        [mainwin/size: 1024x568
                                                                          setdrawpanel   'done] 
                                                                         [setdrawpanel 'done]
                                                                 ]
@@ -312,5 +321,5 @@ mainwin/actors: context [
 
 
 view/no-wait/flags mainwin [resize]
-mainwin/size: 980x568
+mainwin/size: 1024x568
 setdrawpanel
