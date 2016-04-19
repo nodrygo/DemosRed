@@ -253,8 +253,8 @@ linescolortool: [
 
 mainmenu: [
             "File" [
-                "OpenRed"     open
-                "Savered"     save
+                "OpenRed"     fopen
+                "Savered"     fsave
                 "-------"
                 "Clear Draw List"   cleardraw
                 "-------"
@@ -322,8 +322,8 @@ setdrawpanel: func [][
 
 mainwin/actors: context [
                 on-menu: func [face [object!] event [event!]][
-                         if event/picked = 'open  [attempt [entities/drlist: load %dessin.red] ]
-                         if event/picked = 'save  [save %dessin.red entities/drlist alertPOPUP "DESSIN.RED SAVED"]
+                         if event/picked = 'fopen  [append entities/drlist copy load to file! curfilename/text] 
+                         if event/picked = 'fsave  [save to file! curfilename/text entities/drlist alertPOPUP "DESSIN.RED SAVED"]
                          if event/picked = 'cleardraw  [clear entities/drlist]
                          if event/picked = 'about [alertPOPUP "RED SIMPLE DEMO CAD "]
                          if event/picket = 'exit [quit]
