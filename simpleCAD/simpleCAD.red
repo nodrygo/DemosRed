@@ -53,6 +53,7 @@ current: context [
     gridsize:  50   ; grid value
     grid: false     ; grid show on/off
     setbg: function [][either bgtransparent [transwhite] [bgcolor] ]
+    lastkey: 'none
 ]
 
 
@@ -68,20 +69,23 @@ entities: context [
 
     redrawgrid: function [][setgrid current/grid]
     setgrid:    function [mode] [ either mode [ buildgrid ][clear self/drgrid ]]
-    buildgrid:  function [] [
-              nbx: current/winx / current/gridsize
-              nby: current/winy / current/gridsize
-              clear self/drgrid
-              while [nbx >= 0] [ n: nby 
-                                 while [n >=  0] [   
-                                        coord: make pair! compose[(nbx * current/gridsize) (n * current/gridsize) ]
-                                        append self/drgrid compose [circle (coord) 1 ]
-                                        n: n - 1
-                                       ]
-                              nbx: nbx - 1
-                              ]
-                self/drgrid
-               ]
+
+    ;; modified as suggested by  RenaudG for speed
+    buildgrid:  does [
+        nbx: current/winx / current/gridsize
+        nby: current/winy / current/gridsize
+        clear self/drgrid
+        while [nbx >= 0] [
+            n: nby 
+            while [n >= 0] [   
+                coord: as-pair  nbx * current/gridsize   n * current/gridsize
+                append self/drgrid compose [circle (coord) 1 ]
+                n: n - 1
+            ]
+            nbx: nbx - 1
+        ]
+        self/drgrid
+    ]
     add:     function [e] [append drlist e]
     remove:  function [id] [drlist/:id: 'none]
     replace: function [id e] [drlist/:id: e]
@@ -93,12 +97,12 @@ entities: context [
 ]
 
 entcolor:  [pen (current/fgcolor)  Fill-pen (current/setbg) Line-width (current/linesize) line-cap (reduce current/endline) line-join ( reduce current/joinline)]
-entline:     [line 0x0 0x0] 
-entcircle:   [circle 0x0 1]
-entbox:      [box 0x0 0x0]
-entarc:      [arc 0x0 1 0 180]
-entarclosed: [arc 0x0 1 0 180 closed]
-entellipse:     [ellipse 0x0 1x1]
+entline:      [line 0x0 0x0] 
+entcircle:    [circle 0x0 1]
+entbox:       [box 0x0 0x0]
+entarc:       [arc 0x0 1 0 180]
+entarclosed:      [arc 0x0 1 0 180 closed]
+entellipse:       [ellipse 0x0 1x1]
 entclosedellipse: [ellipse 0x0 1x1 closed]
 
 dragent: context [
@@ -109,20 +113,29 @@ dragent: context [
     nbclick: 0       ; nbclick for entitie
     snap:   'none    ; none grid endpt midle center 
     running: false
+
     dragstart: func [pos /local ecolor] [ 
+                current/lastkey: 'none
                 nbclick: nbclick + 1 
                 dragent/running: true
                 if current/seltype = 'none 
                    [if nbclick = 1 [dragent/start: pos clear tmplist prepareent pos] ]
-                print ["bnclick : bnpte " nbclick nbpte]
+                ;print ["bnclick : bnpte " nbclick nbpte]
                 updateelist
             ]
-    dragend:  func [pos] [   print "DRAGEND  " probe elist
+    dragend:  func [pos] [  ;print "ENTER DRAGEND  " probe elist
                 if nbclick  >=  nbpte  [dragent/running: false 
                                         nbclick: 0
-                                        append entities/drlist copy dragent/tmplist ]
+                                        unless (mold current/lastkey)  =  #"^["
+                                        [append entities/drlist copy dragent/tmplist]
+                                         clear elist ]
+                current/lastkey: 'none
             ]
-    dragmove: func [pos /local newval] [  ;print ["DRAGMOVE" current/seltype "  POS" pos]     
+    dragmove: func [pos /local newval] [  ;print ["DRAGMOVE" current/seltype "  POS" pos] 
+                ;;;;;print [ "DRAGMOVE CURRENT KEY " mold current/lastkey]
+                if current/lastkey =  #"^[" [ dragent/running: false 
+                                              nbclick: 0
+                                              clear tmplist clear elist]     
                 if dragent/running  [
                     switch current/tool [
                         'line      [addentpt nbclick + 1 pos]
@@ -142,7 +155,7 @@ dragent: context [
                     updateelist
                    ]
             ]
-    prepareent: func [pos][ print "prepare entitie"
+    prepareent: func [pos][ ;print "prepare entitie"
                 ecolor:  compose entcolor  
                 switch current/tool [
                   'line   [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entline)]]   ]
@@ -171,24 +184,24 @@ dragent: context [
 tools-bar: [
     group-box "TOOLS"  [ 
     return
-    radio "line"  50x20 data true  [current/tool: 'line] return
-    radio "box"   50x20  [current/tool: 'box] return
-    radio "circle" 50x20 [current/tool: 'circle] return
-    radio "arc" 50x20   [current/tool: 'arc]
-    radio "closed" 50x20   [current/tool: 'arclosed]  return
+    radio "line"    50x20 data true  [current/tool: 'line] return
+    radio "box"     50x20  [current/tool: 'box] return
+    radio "circle"  50x20 [current/tool: 'circle] return
+    radio "arc"     50x20   [current/tool: 'arc]
+    radio "closed"  50x20   [current/tool: 'arclosed]  return
     radio "ellipse" 50x20   [current/tool: 'ellipse] 
-    radio "closed" 50x20   [current/tool: 'closedellipse] 
+    radio "closed"  50x20   [current/tool: 'closedellipse] 
     ]
 ]
 
 sel-bar: [
     group-box "SELECT"  [ 
     return
-    radio "none"  data true       [current/tool: 'point] return
-    radio "all"         [current/tool: 'point] return
-    radio "point"         [current/tool: 'point] return
-    radio "insideRect"    [current/tool: 'inside] return
-    radio "overlapRect"   [current/tool: 'overlap] 
+    radio "none"  data true [current/tool: 'point] return
+    radio "all"             [current/tool: 'point] return
+    radio "point"           [current/tool: 'point] return
+    radio "insideRect"      [current/tool: 'inside] return
+    radio "overlapRect"     [current/tool: 'overlap] 
     ]
 ]
 
@@ -203,11 +216,11 @@ grid-bar: [
 snap-bar: [
     group-box "SNAP"  [ 
     return
-    radio "endpoint"         [current/tool: 'endpoint] return
-    radio "midpoint"         [current/tool: 'midpoint] return
-    radio "midpoint"         [current/tool: 'point] return
-    radio "center"           [current/tool: 'point] return
-    radio "midpoint"         [current/tool: 'point] 
+    radio "endpoint"       [current/tool: 'endpoint] return
+    radio "midpoint"       [current/tool: 'midpoint] return
+    radio "midpoint"       [current/tool: 'point] return
+    radio "center"         [current/tool: 'point] return
+    radio "midpoint"       [current/tool: 'point] 
     ]
 ]
 
@@ -242,6 +255,9 @@ mainmenu: [
             "File" [
                 "OpenRed"     open
                 "Savered"     save
+                "-------"
+                "Clear Draw List"   cleardraw
+                "-------"
                 "Exit"        exit
                    ]
             "Help" [ "About"  about]
@@ -266,9 +282,9 @@ mainlayer: compose/deep [
        ]
     drpanel: panel  [
 
-         at 0x10  basebg: base   300x480        white  all-over draw entities/drlist 
+         at 0x10  basebg: base   300x480      white  all-over draw entities/drlist 
          at 0x10  basegrid: base 300x480 transwhite  all-over draw entities/drgrid
-         at 0x10  basefg: base   300x480   transwhite  all-over draw dragent/elist 
+         at 0x10  basefg: base   300x480 transwhite  all-over draw dragent/elist 
      ]                        
 ]
 
@@ -280,10 +296,10 @@ drpanel/actors:  context [
                 on-down: func [face [object!] event [event!]][ ;print "on-down"
                                                              dragent/dragstart event/offset 
                                                             'done ]
-                on-up:   func [face [object!] event [event!]][ 
+                on-up:       func [face [object!] event [event!]][ 
                                                              dragent/dragend event/offset 
                                                             'done ]
-                on-over:  func [face [object!] event [event!]][ ;print "on-over"
+                on-over:     func [face [object!] event [event!]][ ;print "on-over"
                                                              dragent/dragmove event/offset 
                                                               'done ]
                 ]
@@ -308,6 +324,7 @@ mainwin/actors: context [
                 on-menu: func [face [object!] event [event!]][
                          if event/picked = 'open  [attempt [entities/drlist: load %dessin.red] ]
                          if event/picked = 'save  [save %dessin.red entities/drlist alertPOPUP "DESSIN.RED SAVED"]
+                         if event/picked = 'cleardraw  [clear entities/drlist]
                          if event/picked = 'about [alertPOPUP "RED SIMPLE DEMO CAD "]
                          if event/picket = 'exit [quit]
                 ]
@@ -317,6 +334,9 @@ mainwin/actors: context [
                                                                         [setdrawpanel 'done]
                                                                 ]
                 on-close:  func  [face [object!] evt [event!]] [ print "win closed"]
+                on-key-down: func [face [object!] event [event!]][current/lastkey: event/key
+                                                                  'done ]
+
            ]
 
 
