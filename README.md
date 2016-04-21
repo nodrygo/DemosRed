@@ -13,6 +13,11 @@ Start REPL then type:
 or if you want a gui   
 ```do read https://raw.githubusercontent.com/nodrygo/DemosRed/master/demosGuiRunner.red```
 
+### unfinished simpleCAD demo
+
+A lot of good CAD already exist so this demo is only to learn Red and nothing else.    
+basic [screen shot](https://github.com/nodrygo/DemosRed/blob/master/simpleCAD/images/redbicycle.png)
+
 ### Why 
 
 I am leaning Red and those demos help me on this process *\(and may help you \:\-\) \)*

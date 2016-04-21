@@ -14,7 +14,6 @@ angle: function [p1 [pair!] p2 [pair!] /return [integer!]][
 ]
 
 snapto:  function [snapmode gridsize pos [pair!]  /return [pair!] ] [
-print ["snapto " snapmode "  " gridsize "  " pos ]
          switch/default snapmode [
                                 'none [pos]
                                 'grid [ (pos / gridsize) * gridsize] 
