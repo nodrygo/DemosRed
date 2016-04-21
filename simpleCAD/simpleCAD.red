@@ -52,6 +52,7 @@ current: context [
     joinline: ['miter]
     gridsize:  50   ; grid value
     grid: false     ; grid show on/off
+    snap: 'none
     setbg: function [][either bgtransparent [transwhite] [bgcolor] ]
     lastkey: 'none
 ]
@@ -114,7 +115,8 @@ dragent: context [
     snap:   'none    ; none grid endpt midle center 
     running: false
 
-    dragstart: func [pos /local ecolor] [ 
+    dragstart: func [pos /local ecolor] [
+                pos: snapto current/snap current/gridsize pos  
                 current/lastkey: 'none
                 nbclick: nbclick + 1 
                 dragent/running: true
@@ -133,6 +135,7 @@ dragent: context [
             ]
     dragmove: func [pos /local newval] [  ;print ["DRAGMOVE" current/seltype "  POS" pos] 
                 ;;;;;print [ "DRAGMOVE CURRENT KEY " mold current/lastkey]
+                pos: snapto current/snap current/gridsize pos
                 if current/lastkey =  #"^[" [ dragent/running: false 
                                               nbclick: 0
                                               clear tmplist clear elist]     
@@ -208,7 +211,8 @@ sel-bar: [
 grid-bar: [
     group-box "GRID"  [ 
     return
-    check "show grid "[current/grid: face/data entities/setgrid face/data] return
+    check "show grid "[current/grid: face/data entities/setgrid face/data]
+    check "snap to grid "[current/snap: either face/data ['grid]['none] ] return
     text "Size: " 30x20  field  "50" on-enter[ current/gridsize: to integer! face/text entities/redrawgrid ]
     ] return 
 ]
@@ -218,9 +222,8 @@ snap-bar: [
     return
     radio "endpoint"       [current/tool: 'endpoint] return
     radio "midpoint"       [current/tool: 'midpoint] return
-    radio "midpoint"       [current/tool: 'point] return
     radio "center"         [current/tool: 'point] return
-    radio "midpoint"       [current/tool: 'point] 
+    radio "midpoint"       [current/tool: 'midpoint] 
     ]
 ]
 
@@ -253,8 +256,8 @@ linescolortool: [
 
 mainmenu: [
             "File" [
-                "OpenRed"     fopen
-                "Savered"     fsave
+                "Load file"     fopen
+                "Save file"     fsave
                 "-------"
                 "Clear Draw List"   cleardraw
                 "-------"
@@ -266,7 +269,7 @@ mainmenu: [
 mainlayer: compose/deep [ 
     panel [
        text  "current file:" 120 bold font-size 12 font-color blue
-       curfilename: field "demos.cad" 80 
+       curfilename: field "redbyke.red" 80 
        return 
        (linescolortool)
        return 
@@ -281,10 +284,11 @@ mainlayer: compose/deep [
              ]
        ]
     drpanel: panel  [
+         at 0x0 text "instructions here: for tools each click select a point" 300 bold font-size 10 font-color black
 
-         at 0x10  basebg: base   300x480      white  all-over draw entities/drlist 
-         at 0x10  basegrid: base 300x480 transwhite  all-over draw entities/drgrid
-         at 0x10  basefg: base   300x480 transwhite  all-over draw dragent/elist 
+         at 0x20  basebg: base   300x480      white  all-over draw entities/drlist 
+         at 0x20  basegrid: base 300x480 transwhite  all-over draw entities/drgrid
+         at 0x20  basefg: base   300x480 transwhite  all-over draw dragent/elist 
      ]                        
 ]
 
@@ -306,7 +310,7 @@ drpanel/actors:  context [
 
 setdrawpanel: func [][
      x: mainwin/size/x -  310
-     y: mainwin/size/y -  20 
+     y: mainwin/size/y -  30 
      current/winx: x
      current/winy: y
      drpanel/size/x: x
@@ -323,7 +327,7 @@ setdrawpanel: func [][
 mainwin/actors: context [
                 on-menu: func [face [object!] event [event!]][
                          if event/picked = 'fopen  [append entities/drlist copy load to file! curfilename/text] 
-                         if event/picked = 'fsave  [save to file! curfilename/text entities/drlist alertPOPUP "DESSIN.RED SAVED"]
+                         if event/picked = 'fsave  [save to file! curfilename/text entities/drlist alertPOPUP copy append "DESSIN.RED SAVED " curfilename]
                          if event/picked = 'cleardraw  [clear entities/drlist]
                          if event/picked = 'about [alertPOPUP "RED SIMPLE DEMO CAD "]
                          if event/picket = 'exit [quit]

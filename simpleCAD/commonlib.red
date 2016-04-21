@@ -6,9 +6,19 @@ distance: function [p1 [pair!] p2 [pair!] /return [integer!]][
    y:  p1/y - p2/y
    to integer! square-root ((x * x) + (y * y)) 
 ]
+
+
 angle: function [p1 [pair!] p2 [pair!] /return [integer!]][
    dxy:  p2 -  p1 
    to integer!  (arctangent2 dxy/y  dxy/x) * (180 / pi) 
+]
+
+snapto:  function [snapmode gridsize pos [pair!]  /return [pair!] ] [
+print ["snapto " snapmode "  " gridsize "  " pos ]
+         switch/default snapmode [
+                                'none [pos]
+                                'grid [ (pos / gridsize) * gridsize] 
+         ][pos]
 ]
 
 ;angle 100x100 200x100
