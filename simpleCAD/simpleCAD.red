@@ -47,6 +47,7 @@ current: context [
     seltype: 'none ; current type of selector
     sel: [ ]        ; current selection list of entities ID
     tool: 'line     ; current entitie
+    closed: false   ; closed entitie
     linesize: 1  
     endline: ['flat]
     joinline: ['miter]
@@ -60,6 +61,7 @@ current: context [
 
 entities: context [
     drlist: [ ;[pen red    Line-width 2 ]
+              ;[spline 94x157 165x67 519x118 521x213 closed]
               ;[pen red   Fill-pen off Line-width 2 line 10x10 100x100] 
               ;[pen green Fill-pen green Line-width 2   circle 110x130 50] 
               ;[pen blue  Fill-pen blue Line-width 4 line 30x30 200x150]
@@ -102,9 +104,9 @@ entline:      [line 0x0 0x0]
 entcircle:    [circle 0x0 1]
 entbox:       [box 0x0 0x0]
 entarc:       [arc 0x0 1 0 180]
-entarclosed:      [arc 0x0 1 0 180 closed]
-entellipse:       [ellipse 0x0 1x1]
-entclosedellipse: [ellipse 0x0 1x1 closed]
+entellipse:   [ellipse 0x0 1x1]
+entpoly:      [spline 0x0 1x1 ]
+
 
 dragent: context [
     elist: []
@@ -115,7 +117,7 @@ dragent: context [
     snap:   'none    ; none grid endpt midle center 
     running: false
 
-    dragstart: func [pos /local ecolor] [
+    dragstart: func [pos /local ecolor] [  print ["ENTER DRAGSTART " ]
                 pos: snapto current/snap current/gridsize pos  
                 current/lastkey: 'none
                 nbclick: nbclick + 1 
@@ -125,58 +127,77 @@ dragent: context [
                 ;print ["bnclick : bnpte " nbclick nbpte]
                 updateelist
             ]
-    dragend:  func [pos] [  ;print "ENTER DRAGEND  " probe elist
+    dragend:  does [ ; print ["ENTER DRAGEND closed?" current/closed  "  " tmplist/2]  
+                ; print ["elist " elist ]
+                ; print ["entities/drlist " entities/drlist ]
                 if nbclick  >=  nbpte  [dragent/running: false 
                                         nbclick: 0
-                                        unless (mold current/lastkey)  =  #"^["
-                                        [append entities/drlist copy dragent/tmplist]
-                                         clear elist ]
+                                        unless (mold current/lastkey)  =  #"^[" [
+                                            if current/closed [
+                                                switch current/tool [
+                                                      'poly 'arc [
+                                                           append tmplist/2 'closed
+                                                                 ]
+                                                ]
+                                            ]
+                                        append entities/drlist copy tmplist
+                                        print ["entities/drlist " probe entities/drlist "\n"tmplist]
+                                        ]
+                                        clear elist clear tmplist ]
                 current/lastkey: 'none
             ]
-    dragmove: func [pos /local newval] [  ;print ["DRAGMOVE" current/seltype "  POS" pos] 
-                ;;;;;print [ "DRAGMOVE CURRENT KEY " mold current/lastkey]
+    dragmove: func [pos /local newval] [ ; print ["DRAGMOVE" current/seltype "  POS" pos] 
+                ;print [ "DRAGMOVE CURRENT KEY " mold current/lastkey]
                 pos: snapto current/snap current/gridsize pos
-                if current/lastkey =  #"^[" [ dragent/running: false 
+                if current/lastkey =  #"^[" [ dragent/running: false
+                                              current/lastkey: "" 
                                               nbclick: 0
-                                              clear tmplist clear elist]     
+                                              clear tmplist clear elist
+                                            ]
+                if current/lastkey =  #"^M"[  dragent/running: false
+                                              nbclick: 999999
+                                              clear elist
+                                              current/lastkey: 'none
+                                              dragend
+                                            ]     
                 if dragent/running  [
                     switch current/tool [
-                        'line      [addentpt nbclick + 1 pos]
-                        'circle    [addentpt nbclick + 1 distance dragent/start pos ] 
-                        'box       [addentpt nbclick + 1 pos]
+                        'line      [setentpt nbclick + 1 pos]
+                        'circle    [setentpt nbclick + 1 distance dragent/start pos ] 
+                        'box       [setentpt nbclick + 1 pos]
                         'arc       [newval:  switch/default nbclick + 1 [
                                               2  [ absolute (dragent/start - pos)]
                                               3  [ angle dragent/start pos]
                                               4  [ angle dragent/start pos]
                                              ][pos]
-                                    addentpt nbclick + 1 newval
+                                    setentpt nbclick + 1 newval
                                     ]
-                        'ellipse        [addentpt nbclick + 1 pos]
-                        'closedellipse  [addentpt nbclick + 1 pos]
+                        'ellipse        [setentpt nbclick + 1 pos]
+                        'poly           [setentpt nbclick + 1 pos]
                       ]
-                    probe tmplist
                     updateelist
                    ]
             ]
-    prepareent: func [pos][ ;print "prepare entitie"
+    prepareent: func [pos][ print "prepare entitie"
                 ecolor:  compose entcolor  
                 switch current/tool [
-                  'line   [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entline)]]   ]
-                  'circle [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entcircle)]] ] 
-                  'box    [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entbox)]]    ] 
-                  'arc    [ nbpte: 4 append tmplist compose/deep [[(ecolor)][(entarc)]]    ]
-                  'arclosed    [ nbpte: 4 append tmplist compose/deep [[(ecolor)][(entarclosed)]] current/tool: 'arc    ]
-                  'ellipse       [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entellipse)]]    ]
-                  'closedellipse [ nbpte: 2 append tmplist compose/deep [[(ecolor)][(entclosedellipse)]]    ]
+                  'line   [setmsg 1 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entline)]]]
+                  'circle [setmsg 3 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entcircle)]]] 
+                  'box    [setmsg 1 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entbox)]]] 
+                  'arc    [setmsg 3 nbpte: 4  append tmplist compose/deep [[(ecolor)][(entarc)]]]
+                  'ellipse[setmsg 3 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entellipse)]]]
+                  'poly   [setmsg 4 nbpte: 20 append tmplist compose/deep [[(ecolor)][(entpoly)]]]
                   ]
-                addentpt nbclick pos
-                probe tmplist
+                setentpt nbclick pos
+                ;probe tmplist/2
                 updateelist
             ]
-    addentpt: func [n pos][ print "addentpt"  
+    setentpt: func [n pos][ print ["addentpt " n]
                 n: n + 1 
-                tmplist/2/:n: pos
-                probe tmplist
+                switch/default current/tool [
+                        'poly      [either n > (length? tmplist/2)[append tmplist/2 pos][tmplist/2/:n: pos]]
+                        ][tmplist/2/:n: pos]
+                ;probe tmplist/2
               ]
     updateelist: func[][
                clear elist
@@ -184,27 +205,36 @@ dragent: context [
               ]
 ]
 
+setmsg: func [x] [
+       switch x [
+             1 [instructions/text:  "click to select next point(escape to quit)"]
+             2 [instructions/text:  "click to select center (escape to quit)"]
+             3 [instructions/text:  "click to select radius (escape to quit)"]
+             4 [instructions/text:  "click to select next point(escape to quit/ enter to finish)"]
+       ]
+]
+
 tools-bar: [
     group-box "TOOLS"  [ 
     return
-    radio "line"    50x20 data true  [current/tool: 'line] return
-    radio "box"     50x20  [current/tool: 'box] return
-    radio "circle"  50x20 [current/tool: 'circle] return
-    radio "arc"     50x20   [current/tool: 'arc]
-    radio "closed"  50x20   [current/tool: 'arclosed]  return
-    radio "ellipse" 50x20   [current/tool: 'ellipse] 
-    radio "closed"  50x20   [current/tool: 'closedellipse] 
+    radio "line"    50x20 data true  [setmsg 1  current/tool: 'line] return
+    radio "box"     50x20  [setmsg 1  current/tool: 'box] return
+    radio "circle"  50x20 [setmsg 2 current/tool: 'circle] return
+    radio "arc"     50x20   [setmsg 2 current/tool: 'arc] return
+    radio "ellipse" 50x20   [setmsg 2 current/tool: 'ellipse] return 
+    radio "spline"  50x20   [setmsg 2 current/tool: 'poly] return
+    check "closed"  50x20   [current/closed: face/data] 
     ]
 ]
 
 sel-bar: [
     group-box "SELECT"  [ 
     return
-    radio "none"  data true [current/tool: 'point] return
-    radio "all"             [current/tool: 'point] return
-    radio "point"           [current/tool: 'point] return
-    radio "insideRect"      [current/tool: 'inside] return
-    radio "overlapRect"     [current/tool: 'overlap] 
+    radio "none"        50x20 data true [current/tool: 'point] return
+    radio "all"         50x20 [current/tool: 'point] return
+    radio "point"       50x20 [current/tool: 'point] return
+    radio "insideRect"  50x20 [current/tool: 'inside] return
+    radio "overlapRect" 50x20 [current/tool: 'overlap] 
     ]
 ]
 
@@ -284,7 +314,7 @@ mainlayer: compose/deep [
              ]
        ]
     drpanel: panel  [
-         at 0x0 text "instructions here: for tools each click select a point" 300 bold font-size 10 font-color black
+         at 0x0  instructions: text "for tools each click select a point" 450 bold font-size 10 font-color black
 
          at 0x20  basebg: base   300x480      white  all-over draw entities/drlist 
          at 0x20  basegrid: base 300x480 transwhite  all-over draw entities/drgrid
@@ -301,7 +331,7 @@ drpanel/actors:  context [
                                                              dragent/dragstart event/offset 
                                                             'done ]
                 on-up:       func [face [object!] event [event!]][ 
-                                                             dragent/dragend event/offset 
+                                                             dragent/dragend  
                                                             'done ]
                 on-over:     func [face [object!] event [event!]][ ;print "on-over"
                                                              dragent/dragmove event/offset 
