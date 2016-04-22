@@ -75,6 +75,7 @@ entities: context [
 
     ;; modified as suggested by  RenaudG for speed
     buildgrid:  does [
+        system/view/auto-sync?: off
         nbx: current/winx / current/gridsize
         nby: current/winy / current/gridsize
         clear self/drgrid
@@ -87,7 +88,9 @@ entities: context [
             ]
             nbx: nbx - 1
         ]
+        system/view/auto-sync?: on
         self/drgrid
+        show basegrid
     ]
     add:     function [e] [append drlist e]
     remove:  function [id] [drlist/:id: 'none]
@@ -124,12 +127,9 @@ dragent: context [
                 dragent/running: true
                 if current/seltype = 'none 
                    [if nbclick = 1 [dragent/start: pos clear tmplist prepareent pos] ]
-                ;print ["bnclick : bnpte " nbclick nbpte]
                 updateelist
             ]
     dragend:  does [ ; print ["ENTER DRAGEND closed?" current/closed  "  " tmplist/2]  
-                ; print ["elist " elist ]
-                ; print ["entities/drlist " entities/drlist ]
                 if nbclick  >=  nbpte  [dragent/running: false 
                                         nbclick: 0
                                         unless (mold current/lastkey)  =  #"^[" [
@@ -141,7 +141,6 @@ dragent: context [
                                                 ]
                                             ]
                                         append entities/drlist copy tmplist
-                                        print ["entities/drlist " probe entities/drlist "\n"tmplist]
                                         ]
                                         clear elist clear tmplist ]
                 current/lastkey: 'none
@@ -178,7 +177,7 @@ dragent: context [
                     updateelist
                    ]
             ]
-    prepareent: func [pos][ print "prepare entitie"
+    prepareent: func [pos][ ; print "prepare entitie"
                 ecolor:  compose entcolor  
                 switch current/tool [
                   'line   [setmsg 1 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entline)]]]
@@ -189,15 +188,13 @@ dragent: context [
                   'poly   [setmsg 4 nbpte: 20 append tmplist compose/deep [[(ecolor)][(entpoly)]]]
                   ]
                 setentpt nbclick pos
-                ;probe tmplist/2
                 updateelist
             ]
-    setentpt: func [n pos][ print ["addentpt " n]
+    setentpt: func [n pos][ ;print ["addentpt " n]
                 n: n + 1 
                 switch/default current/tool [
                         'poly      [either n > (length? tmplist/2)[append tmplist/2 pos][tmplist/2/:n: pos]]
                         ][tmplist/2/:n: pos]
-                ;probe tmplist/2
               ]
     updateelist: func[][
                clear elist
@@ -362,8 +359,8 @@ mainwin/actors: context [
                          if event/picked = 'about [alertPOPUP "RED SIMPLE DEMO CAD "]
                          if event/picket = 'exit [quit]
                 ]
-                on-resize: func  [face [object!] evt [event!]] [ either mainwin/size < 1024x568 
-                                                                        [mainwin/size: 1024x568
+                on-resize: func  [face [object!] evt [event!]] [ either mainwin/size < 1024x700 
+                                                                        [mainwin/size: 1024x700
                                                                          setdrawpanel   'done] 
                                                                         [setdrawpanel 'done]
                                                                 ]
@@ -375,5 +372,5 @@ mainwin/actors: context [
 
 
 view/no-wait/flags mainwin [resize]
-mainwin/size: 1024x568
+mainwin/size: 1024x700
 setdrawpanel
