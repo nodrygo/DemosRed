@@ -125,24 +125,24 @@ closetoarcradius?: function [pos [pair!] pc [pair!] pr [pair!] alpha [integer!] 
          a >= alpha a <= beta]
 ]
 
-closetobox?:  function [pos [pair!] p1 [pair!]  p3 [pair!] /return [[logic!] [pair!] [pair!][pair!]]][
+closetobox?:  function [pos [pair!] p1 [pair!]  p3 [pair!] return: [[logic!] [pair!] [pair!][pair!]]][
      " return 1/check status 2/endpoint 3/midpoint 4/closest point for box "
      p2: as-pair p3/x p1/y
      p4: as-pair p1/x p3/y
      ret: reduce [false pos pos pos ]
      res:  closest-point-line pos p1 p2  
-     if all [res/1 <= deltaclosest res/3 <= 0.5][ret: reduce [true p1 (line-midpoint p1 p2) res/2]]
-     if all [res/1 <= deltaclosest res/3 > 0.5] [ret: reduce [true p2 (line-midpoint p1 p2) res/2]]
+     if all [res/1 <= deltaclosest res/3 <= 0.5][return reduce [true p1 (line-midpoint p1 p2) res/2]]
+     if all [res/1 <= deltaclosest res/3 > 0.5] [return reduce [true p2 (line-midpoint p1 p2) res/2]]
      res:  closest-point-line pos p2 p3 
-     if all [res/1 <= deltaclosest res/3 <= 0.5][ret: reduce [true p2 (line-midpoint p2 p3) res/2]]
-     if all [res/1 <= deltaclosest res/3 > 0.5] [ret: reduce [true p3 (line-midpoint p2 p3) res/2]]
+     if all [res/1 <= deltaclosest res/3 <= 0.5][return reduce [true p2 (line-midpoint p2 p3) res/2]]
+     if all [res/1 <= deltaclosest res/3 > 0.5] [return reduce [true p3 (line-midpoint p2 p3) res/2]]
      res:  closest-point-line pos p3 p4 
-     if all [res/1 <= deltaclosest res/3 <= 0.5][ret: reduce [true p3 (line-midpoint p3 p4) res/2]]
-     if all [res/1 <= deltaclosest res/3 > 0.5] [ret: reduce [true p4 (line-midpoint p3 p4) res/2]]
+     if all [res/1 <= deltaclosest res/3 <= 0.5][return reduce [true p3 (line-midpoint p3 p4) res/2]]
+     if all [res/1 <= deltaclosest res/3 > 0.5] [return reduce [true p4 (line-midpoint p3 p4) res/2]]
      res:  closest-point-line pos p1 p4 
-     if all [res/1 <= deltaclosest res/3 <= 0.5][ret: reduce [true p1 (line-midpoint p1 p4) res/2]]
-     if all [res/1 <= deltaclosest res/3 > 0.5] [ret: reduce [true p4 (line-midpoint p1 p4) res/2]]
-     ret
+     if all [res/1 <= deltaclosest res/3 <= 0.5][return reduce [true p1 (line-midpoint p1 p4) res/2]]
+     if all [res/1 <= deltaclosest res/3 > 0.5] [return reduce [true p4 (line-midpoint p1 p4) res/2]]
+     return ret
 ]
 
 
