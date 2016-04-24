@@ -1,7 +1,7 @@
 Red [ ]
 
 ;;; max distance between 2 points for selection
-deltaclosest: 15
+deltaclosest: 8
 
 comment {
     ;rewrite it more generic 
@@ -28,13 +28,14 @@ angle: function [p1 [pair!] p2 [pair!] /return [integer!]][
 ;angle 100x100 100x-100 
 
 snapto:  function [snapmode gridsize pos [pair!]  /return [pair!] ] [
+         e?: either (length? entities/drlist) > 0 [true][false]
          switch/default snapmode [
-                                'none [pos]
-                                'grid [ (pos / gridsize) * gridsize] 
-                                'endline   [match-closeendline pos]
-                                'linemidpoint [match-linemidpoint pos]
-                                'centerof     [match-centerof pos]
-                                'closest      [match-closestpoint pos]
+                                'none         [pos]
+                                'grid         [(pos / gridsize) * gridsize] 
+                                'endline      [either e? [match-closeendline pos][pos]]
+                                'linemidpoint [either e? [match-linemidpoint pos][pos]]
+                                'centerof     [either e? [match-centerof pos][pos]]
+                                'closest      [either e? [match-closestpoint pos][pos]]
          ][pos]
 ]
 
@@ -58,18 +59,35 @@ distance -20x10 -30x10
 distance  0x100 0x-50
 }
 
+inbound?: function [pos [pair!] a [pair!] b [pair!]  /return [logic!]][
+  either a/x > b/x [minx: b/x  - deltaclosest  
+                    maxx: a/x  + deltaclosest ]
+                   [minx: a/x  - deltaclosest 
+                    maxx: b/x  + deltaclosest ] 
+  either a/y > b/y [miny: b/y  - deltaclosest
+                    maxy: a/y  + deltaclosest ]
+                   [miny: a/y  - deltaclosest 
+                    maxy: b/y  + deltaclosest ] 
+  ;print ["pos"  pos  "   a" a "   b" b "  minx" minx " maxx " maxx "  miny  " miny "   maxy" maxy]
+  all [ pos/x < maxx 
+        pos/x >= minx
+        pos/y < maxy
+        pos/y >= miny
+      ]
+]
+;;;; add limit to bound of rect entite
 closest-point-line: function [pos [pair!] a [pair!] b [pair!]  /return [[integer!] [pair!] [integer!]]][
    ;from http://www.faqs.org/faqs/graphics/algorithms-faq/
-    c1: (i2f pos/x - i2f  a/x) * (i2f  b/x - i2f  a/x)  
-    c2: (i2f pos/y - i2f  a/y) * (i2f  b/y - i2f  a/y) 
-    l: distance a b
-    r: c1 + c2 / i2f  power l 2
-    nx: a/x + (r * ( b/x -  a/x))
-    ny: a/y + (r * ( b/y -  a/y))
-    np: as-pair nx ny 
-    d: distance pos np 
-;print ["d:" d "  r:" r  " nx:" nx " ny:" ny  " pos:"  pos "   a:" a "  b:" b]
-    reduce [d np r ]
+        c1: (i2f pos/x - i2f  a/x) * (i2f  b/x - i2f  a/x)  
+        c2: (i2f pos/y - i2f  a/y) * (i2f  b/y - i2f  a/y) 
+        l: distance a b
+        r: c1 + c2 / i2f  power l 2
+        nx: a/x + (r * ( b/x -  a/x))
+        ny: a/y + (r * ( b/y -  a/y))
+        np: as-pair nx ny 
+        d: distance pos np 
+       ; print ["d:" d "  r:" r  " nx:" nx " ny:" ny  " pos:"  pos "   a:" a "  b:" b]
+        either all [ r <= 1.0 r >= 0 ] [reduce [d np r ] ] [reduce [999999 pos 0 ]]
 ]
 
 comment {
@@ -159,7 +177,7 @@ match-closeendline: function [pos /return [pair!]] [
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
-                print ["ENDLINE RES:" res]
+                ;print ["ENDLINE RES:" res]
                 either res/1 [break/return res/2]
                              [true pos] 
                 ]

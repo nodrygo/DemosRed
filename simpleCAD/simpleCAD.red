@@ -177,7 +177,7 @@ dragent: context [
                       ]
                     updateelist
                    ] [ system/view/auto-sync?: off
-                       if nbclick = 0 [clear elist append elist compose [pen black circle (pos) 2 ]]
+                       if nbclick = 0 [clear elist append elist compose [pen black fill-pen red circle (pos) 3 ]]
                        system/view/auto-sync?: on 
                        show basefg
                        ]
