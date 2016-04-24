@@ -41,20 +41,20 @@ current: context [
     winy: 568
     bgcolor: white  ; current bgcolor
     fgcolor: black  ; current fgcolor
-    bgtransparent: false
+    bgtransparent?: true
     entitiesdraw: []; current draw content for entities
     selectdraw: []  ; current draw content for drag/drop selection 
     seltype: 'none ; current type of selector
     sel: [ ]        ; current selection list of entities ID
     tool: 'line     ; current entitie
-    closed: false   ; closed entitie
+    closed?: false   ; closed entitie
     linesize: 1  
     endline: ['flat]
     joinline: ['miter]
     gridsize:  50   ; grid value
-    grid: false     ; grid show on/off
+    grid?: false     ; grid show on/off
     snap: 'none
-    setbg: function [][either bgtransparent [transwhite] [bgcolor] ]
+    setbg: function [][either bgtransparent? [transwhite] [bgcolor] ]
     lastkey: 'none
 ]
 
@@ -70,7 +70,7 @@ entities: context [
             ] 
     drgrid: []  
 
-    redrawgrid: function [][setgrid current/grid]
+    redrawgrid: function [][setgrid current/grid?]
     setgrid:    function [mode] [ either mode [ buildgrid ][clear self/drgrid ]]
 
     ;; modified as suggested by  RenaudG for speed
@@ -106,9 +106,9 @@ entcolor:  [pen (current/fgcolor)  Fill-pen (current/setbg) Line-width (current/
 entline:      [line 0x0 0x0] 
 entcircle:    [circle 0x0 1]
 entbox:       [box 0x0 0x0]
-entarc:       [arc 0x0 1 0 180]
+entarc:       [arc 0x0 1 0 260]
 entellipse:   [ellipse 0x0 1x1]
-entpoly:      [spline 0x0 1x1 ]
+entspline:      [spline 0x0 1x1 ]
 
 
 dragent: context [
@@ -120,7 +120,7 @@ dragent: context [
     snap:   'none    ; none grid endpt midle center 
     running: false
 
-    dragstart: func [pos /local ecolor] [  print ["ENTER DRAGSTART " ]
+    dragstart: func [pos] [ ; print ["ENTER DRAGSTART " ]
                 pos: snapto current/snap current/gridsize pos  
                 current/lastkey: 'none
                 nbclick: nbclick + 1 
@@ -133,14 +133,14 @@ dragent: context [
                 if nbclick  >=  nbpte  [dragent/running: false 
                                         nbclick: 0
                                         unless (mold current/lastkey)  =  #"^[" [
-                                            if current/closed [
+                                            if current/closed? [
                                                 switch current/tool [
                                                       'poly 'arc [
                                                            append tmplist/2 'closed
                                                                  ]
                                                 ]
                                             ]
-                                        append entities/drlist copy tmplist
+                                        append entities/drlist  reduce[ copy tmplist]
                                         ]
                                         clear elist clear tmplist ]
                 current/lastkey: 'none
@@ -157,9 +157,10 @@ dragent: context [
                                               nbclick: 999999
                                               clear elist
                                               current/lastkey: 'none
+                                              if (length? tmplist/2) > 3 [remove back tail tmplist/2]
                                               dragend
                                             ]     
-                if dragent/running  [
+                either dragent/running  [
                     switch current/tool [
                         'line      [setentpt nbclick + 1 pos]
                         'circle    [setentpt nbclick + 1 distance dragent/start pos ] 
@@ -171,11 +172,15 @@ dragent: context [
                                              ][pos]
                                     setentpt nbclick + 1 newval
                                     ]
-                        'ellipse        [setentpt nbclick + 1 pos]
-                        'poly           [setentpt nbclick + 1 pos]
+                        'ellipse        [setentpt nbclick + 1 absolute (dragent/start - pos)]
+                        'spline         [setentpt nbclick + 1 pos]
                       ]
                     updateelist
-                   ]
+                   ] [ system/view/auto-sync?: off
+                       if nbclick = 0 [clear elist append elist compose [pen black circle (pos) 2 ]]
+                       system/view/auto-sync?: on 
+                       show basefg
+                       ]
             ]
     prepareent: func [pos][ ; print "prepare entitie"
                 ecolor:  compose entcolor  
@@ -185,7 +190,7 @@ dragent: context [
                   'box    [setmsg 1 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entbox)]]] 
                   'arc    [setmsg 3 nbpte: 4  append tmplist compose/deep [[(ecolor)][(entarc)]]]
                   'ellipse[setmsg 3 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entellipse)]]]
-                  'poly   [setmsg 4 nbpte: 20 append tmplist compose/deep [[(ecolor)][(entpoly)]]]
+                  'poly   [setmsg 4 nbpte: 20 append tmplist compose/deep [[(ecolor)][(entspline)]]]
                   ]
                 setentpt nbclick pos
                 updateelist
@@ -214,45 +219,48 @@ setmsg: func [x] [
 tools-bar: [
     group-box "TOOLS"  [ 
     return
-    radio "line"    50x20 data true  [setmsg 1  current/tool: 'line] return
-    radio "box"     50x20  [setmsg 1  current/tool: 'box] return
-    radio "circle"  50x20 [setmsg 2 current/tool: 'circle] return
-    radio "arc"     50x20   [setmsg 2 current/tool: 'arc] return
-    radio "ellipse" 50x20   [setmsg 2 current/tool: 'ellipse] return 
-    radio "spline"  50x20   [setmsg 2 current/tool: 'poly] return
-    check "closed"  50x20   [current/closed: face/data] 
+    radio "line"    50x15 data true  [setmsg 1  current/tool: 'line] return
+    radio "box"     50x15   [setmsg 1  current/tool: 'box] return
+    radio "circle"  50x15   [setmsg 2 current/tool: 'circle] return
+    radio "arc"     50x15   [setmsg 2 current/tool: 'arc] return
+    radio "ellipse" 50x15   [setmsg 2 current/tool: 'ellipse] return 
+    radio "spline"  50x15   [setmsg 2 current/tool: 'spline] return
+    check "closed"  50x15   [current/closed: face/data] 
     ]
 ]
+
+snap-bar: [
+    group-box "SNAP to closest"  [ 
+    return
+    radio "none"   80x15  data true   [current/snap: 'none] 
+    radio "grid "  80x15    [current/snap: 'grid ] return
+    radio "line end" 80x15  [current/snap: 'endline] 
+    radio "line midpoint"       [current/snap:  'linemidpoint] return 
+    radio "center of"  80x15 [ current/snap:  'centerof]
+    radio "closest"       [current/snap: 'closest]  return
+    ]
+]
+
 
 sel-bar: [
     group-box "SELECT"  [ 
     return
-    radio "none"        50x20 data true [current/tool: 'point] return
-    radio "all"         50x20 [current/tool: 'point] return
-    radio "point"       50x20 [current/tool: 'point] return
-    radio "insideRect"  50x20 [current/tool: 'inside] return
-    radio "overlapRect" 50x20 [current/tool: 'overlap] 
+    radio "none"        50x15 data true [current/tool: 'point] return
+    radio "all"         50x15 [current/tool: 'point] return
+    radio "point"       50x15 [current/tool: 'point] return
+    radio "insideRect"  50x15 [current/tool: 'inside] return
+    radio "overlapRect" 50x15 [current/tool: 'overlap] 
     ]
 ]
 
 grid-bar: [
     group-box "GRID"  [ 
     return
-    check "show grid "[current/grid: face/data entities/setgrid face/data]
-    check "snap to grid "[current/snap: either face/data ['grid]['none] ] return
-    text "Size: " 30x20  field  "50" on-enter[ current/gridsize: to integer! face/text entities/redrawgrid ]
+    check "show grid "[current/grid?: face/data entities/setgrid face/data]
+    text "Size: " 20x20  field  "50" on-enter[ current/gridsize: to integer! face/text entities/redrawgrid ]
     ] return 
 ]
 
-snap-bar: [
-    group-box "SNAP"  [ 
-    return
-    radio "endpoint"       [current/tool: 'endpoint] return
-    radio "midpoint"       [current/tool: 'midpoint] return
-    radio "center"         [current/tool: 'point] return
-    radio "midpoint"       [current/tool: 'midpoint] 
-    ]
-]
 
 typeendline: #(1 'flat 2 'square 3 'round) 
 typejoinline: #(1 'miter 2 'round 3 'bevel) 
@@ -267,7 +275,7 @@ linescolortool: [
             fcol: base 40x40  black  on-down [ face/color: current/fgcolor: colorpopup current/fgcolor]
             ]
             panel  [
-            bgt: check "bg transparent" [current/bgtransparent: face/data] return 
+            bgt: check "bg transparent" data: true [current/bgtransparent?: face/data] return 
     text "Size: " 20x20  field  "1" on-change[ current/linesize: to integer! face/text] 
                    ]return
     panel [ across
@@ -286,6 +294,7 @@ mainmenu: [
                 "Load file"     fopen
                 "Save file"     fsave
                 "-------"
+                "Clear Last entitie"   clearlast
                 "Clear Draw List"   cleardraw
                 "-------"
                 "Exit"        exit
@@ -306,7 +315,7 @@ mainlayer: compose/deep [
                 (tools-bar)
                 (sel-bar)
              ]
-       panel [ 
+       panel [  (snap-bar) return
                 (grid-bar)
              ]
        ]
@@ -353,11 +362,14 @@ setdrawpanel: func [][
 
 mainwin/actors: context [
                 on-menu: func [face [object!] event [event!]][
-                         if event/picked = 'fopen  [append entities/drlist copy load to file! curfilename/text] 
-                         if event/picked = 'fsave  [save to file! curfilename/text entities/drlist alertPOPUP copy append "DESSIN.RED SAVED " curfilename]
-                         if event/picked = 'cleardraw  [clear entities/drlist]
-                         if event/picked = 'about [alertPOPUP "RED SIMPLE DEMO CAD "]
-                         if event/picket = 'exit [quit]
+                        switch event/picked [
+                           'fopen  [append entities/drlist copy load to file! curfilename/text] 
+                           'fsave  [save to file! curfilename/text entities/drlist alertPOPUP copy append "DESSIN.RED SAVED " curfilename]
+                           'clearlast  [remove back tail entities/drlist]
+                           'cleardraw  [clear entities/drlist]
+                           'about [alertPOPUP "RED SIMPLE DEMO CAD "]
+                           'exit [quit]
+                         ]
                 ]
                 on-resize: func  [face [object!] evt [event!]] [ either mainwin/size < 1024x700 
                                                                         [mainwin/size: 1024x700
