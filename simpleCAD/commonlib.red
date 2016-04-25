@@ -167,89 +167,93 @@ closetobox?:  function [pos [pair!] p1 [pair!]  p3 [pair!] return: [[logic!] [pa
 ;;; NAIVE SNAP MODE 
 match-closeendline: function [pos /return [pair!]] [
     foreach e entities/drlist [ 
+        unless e = [] [
         case [
             e/2/1 = 'line [
                 res:  closest-point-line pos e/2/2 e/2/3
                 case [
                   all [res/1 <= deltaclosest res/3 <= 0.5] [break/return e/2/2]
                   all [res/1 <= deltaclosest res/3 >  0.5] [break/return e/2/3]
-                  true pos 
+                  true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
                 ;print ["ENDLINE RES:" res]
                 either res/1 [break/return res/2]
-                             [true pos] 
+                             [pos] 
                 ]
-            true pos
+            true [pos]
         ]
-    ]
+    ]]
 ]
 
 match-linemidpoint: function [pos /return [pair!]] [
     foreach e entities/drlist [ 
+        unless e = [] [
         case [
             e/2/1 = 'line [
                 case [
                     (point-closeto-line? pos e/2/2  e/2/3 ) [break/return (line-midpoint e/2/2 e/2/3)]
-                    true pos 
+                    true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
                 either res/1 [break/return res/3]
-                             [true pos] 
+                             [pos] 
                 ]
-            true pos 
+            true [pos] 
         ]
-    ]
+    ]]
 ]
 
 match-closestpoint: function [pos /return [pair!]] [
-    foreach e entities/drlist [ 
+    foreach e entities/drlist [
+        unless e = [] [ 
         case [
             e/2/1 = 'line [
                 res:  closest-point-line pos e/2/2 e/2/3
                 case [
                   all [res/1 <= deltaclosest res/3 <= 0.5] [break/return res/2]
                   all [res/1 <= deltaclosest res/3 >  0.5] [break/return res/2]
-                  true pos 
+                  true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
                 either res/1 [break/return res/4]
-                             [true pos] 
+                             [pos] 
                 ]
             e/2/1 = 'circle [
                 res:  closetocircle? pos e/2/2 e/2/3
                 either res/1 [break/return res/2]
-                             [true pos] 
+                             [pos] 
                 ]
-            true pos 
+            true [pos] 
         ]
-    ]
+    ]]
 ]
 
 match-centerof: function [pos /return [pair!]] [
     foreach e entities/drlist [
+    unless e = [] [
         case [
             e/2/1 = 'circle [ 
                           case [
                            (closetoradius? pos e/2/2 e/2/3) [break/return e/2/2]
-                           true pos 
+                           true [pos] 
                          ]]
             e/2/1 = 'box [ 
                 res:  closetobox? pos e/2/2 e/2/3
                 either res/1 [break/return  (line-midpoint e/2/2 e/2/3)]
-                             [true pos]
+                             [pos]
                          ]
             e/2/1 = 'arc [ 
                           case [
                            (closetoarcradius? pos e/2/2 e/2/3 e/2/4  e/2/5 ) [break/return e/2/2]
-                           true pos 
+                           true [pos] 
                          ]]
-            true pos
+            true [pos]
         ]
-    ]
+    ]]
 ]
 
 to-color: function [r g b][

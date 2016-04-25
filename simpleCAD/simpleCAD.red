@@ -108,7 +108,7 @@ entcircle:    [circle 0x0 1]
 entbox:       [box 0x0 0x0]
 entarc:       [arc 0x0 1 0 260]
 entellipse:   [ellipse 0x0 1x1]
-entspline:      [spline 0x0 1x1 ]
+entspline:    [spline 0x0 1x1 ]
 
 
 dragent: context [
@@ -121,7 +121,7 @@ dragent: context [
     running: false
 
     dragstart: func [pos] [ ; print ["ENTER DRAGSTART " ]
-                pos: snapto current/snap current/gridsize pos  
+                pos: snapto current/snap current/gridsize pos
                 current/lastkey: 'none
                 nbclick: nbclick + 1 
                 dragent/running: true
@@ -140,7 +140,7 @@ dragent: context [
                                                                  ]
                                                 ]
                                             ]
-                                        append entities/drlist  reduce[ copy tmplist]
+                                        unless tmplist = [] [append entities/drlist  reduce[ copy tmplist]]
                                         ]
                                         clear elist clear tmplist ]
                 current/lastkey: 'none
@@ -153,13 +153,20 @@ dragent: context [
                                               nbclick: 0
                                               clear tmplist clear elist
                                             ]
-                if current/lastkey =  #"^M"[  dragent/running: false
-                                              nbclick: 999999
-                                              clear elist
-                                              current/lastkey: 'none
-                                              if (length? tmplist/2) > 3 [remove back tail tmplist/2]
-                                              dragend
-                                            ]     
+                if current/lastkey =  #"^M"[  if all [ 
+                                                       current/tool = 'spline
+                                                       dragent/running: true
+                                                       nbclick > 0
+                                                       (length? tmplist/2) > 3
+                                                     ]
+                                                     [remove back tail tmplist/2
+                                                      dragent/running: false
+                                                      nbclick: 999999
+                                                      clear elist
+                                                      current/lastkey: 'none
+                                                      dragend
+                                                    ]
+                                            ]
                 either dragent/running  [
                     switch current/tool [
                         'line      [setentpt nbclick + 1 pos]
@@ -177,7 +184,7 @@ dragent: context [
                       ]
                     updateelist
                    ] [ system/view/auto-sync?: off
-                       if nbclick = 0 [clear elist append elist compose [pen black fill-pen red circle (pos) 3 ]]
+                       if nbclick = 0 [clear elist append elist compose [pen black fill-pen red circle (pos) 4 ]]
                        system/view/auto-sync?: on 
                        show basefg
                        ]
@@ -203,7 +210,7 @@ dragent: context [
               ]
     updateelist: func[][
                clear elist
-               append elist tmplist
+               unless tmplist = [] [append elist tmplist]
               ]
 ]
 
