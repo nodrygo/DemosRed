@@ -17,12 +17,19 @@ distance 10x10 20x20
 distance 20x20 10x10
 }
 
-angle: function [p1 [pair!] p2 [pair!] /return [integer!]][
-   dxy:  p2 -  p1 
-   to integer!  (arctangent2 dxy/y  dxy/x) * (180 / pi) 
+angle: function [pc [pair!] pr [pair!] /return [integer!]][
+   alpha:   to integer! (arctangent2 pr/y - pc/y  pr/x - pc/x) * (180 / pi)
+]
+angle360: function [pc [pair!] pr [pair!] /return [integer!]][
+   ; consider inverted axis 
+   alpha:   angle pc pr 
+   alpha: either alpha < 0.0 [ 360 + alpha ] [ alpha ] 
+   ;;;print ["pc" pc "  pr" pr "  dx" pr/x - pc/x "  dy" pr/y - pc/y "  alpha" alpha ]
+   absolute alpha 
 ]
 ;angle 100x100 200x100
 ;angle 100x100 100x0
+;angle 100x100 100x100
 ;angle 100x100 100x200
 ;angle 100x100 -100x100
 ;angle 100x100 100x-100 
@@ -31,7 +38,7 @@ snapto:  function [snapmode gridsize pos [pair!]  /return [pair!] ] [
          e?: either (length? entities/drlist) > 0 [true][false]
          switch/default snapmode [
                                 'none         [pos]
-                                'grid         [(pos / gridsize) * gridsize] 
+                                'grid         [(pos + (gridsize / 2 ) / gridsize) * gridsize] 
                                 'endline      [either e? [match-closeendline pos][pos]]
                                 'linemidpoint [either e? [match-linemidpoint pos][pos]]
                                 'centerof     [either e? [match-centerof pos][pos]]
@@ -123,7 +130,7 @@ closetoradius?: function [pos [pair!] pc [pair!] r [integer!] /return [logic!]][
 
 closetocircle?: function [pos [pair!] pc [pair!] r [integer!] /return [[logic!] [pair!]]][
     ; p1= point p2=centre  r=rayon  return 1/boolean 2/pos on circle 
-    either (closetoradius?  pos pc r ) [ a: angle pc pos 
+    either (closetoradius?  pos pc r ) [ a: angle360 pc pos 
                                          nx: ((cosine a) * r) + pc/x 
                                          ny: ((sine a) * r) + pc/y
                                          npt: as-pair nx ny
@@ -132,7 +139,38 @@ closetocircle?: function [pos [pair!] pc [pair!] r [integer!] /return [[logic!] 
                                        [ reduce [false pos]] 
 
 ]
-
+closetoellipse?: function [pos [pair!] pu [pair!] pr [pair!] /return [[logic!] [pair!]]][
+    ; pos= point pb=upperbox  pr=rayon x&y   return 1/boolean 2/pos on circle 
+    pc:  pu + (pr / 2)
+    alpha:  angle360 pc pos 
+    r1: pr/x / 2 
+    r2: pr/y / 2 
+    switch/default alpha [ 
+                      0     [ nx: (pc/x + r1)  ny: pc/y  ]
+                      90    [ nx: pc/x         ny: ( pc/y + r2 )]
+                      180  [ (nx: pc/x - r1)   ny: pc/y ]
+                      270   [ nx: pc/x         ny: ( pc/y - r2 )]
+                    ][ tt: (tangent alpha)
+                       tt2: tt * tt 
+                       denom: square-root ( (r2 * r2) + (r1 * r1 * tt2)) 
+                       either ((alpha < 90) or (alpha > 270))
+                          [
+                               nx:  pc/x + ((r1 * r2) / denom )
+                               ny:  pc/y + ((r1 * r2 * tt) / denom )
+                          ]
+                          [
+                               nx:  pc/x - ((r1 * r2) / denom )
+                               ny:  pc/y - ((r1 * r2 * tt) / denom )
+                          ]
+                        
+                      ]
+    npt: as-pair nx ny 
+    ;;print ["  ntp" npt "  pos" pos ]
+    either all [ (absolute (npt/x - pos/x))  <= deltaclosest
+                 (absolute (npt/y - pos/y))  <= deltaclosest]
+               [ reduce [true  npt pc] ]
+               [ reduce [false pos pos ] ] 
+]
 closetoarcradius?: function [pos [pair!] pc [pair!] pr [pair!] alpha [integer!] beta [integer!] /return [logic!]][
     ; pos= point pc=centre  pr= point rayon alpha beta=angle debut fin arc 
     r: distance pc pr 
@@ -222,6 +260,11 @@ match-closestpoint: function [pos /return [pair!]] [
                 either res/1 [break/return res/4]
                              [pos] 
                 ]
+            e/2/1 = 'ellipse [ 
+                res:  closetoellipse? pos e/2/2 e/2/3
+                either res/1 [break/return  res/2]
+                             [pos]
+                         ]
             e/2/1 = 'circle [
                 res:  closetocircle? pos e/2/2 e/2/3
                 either res/1 [break/return res/2]
@@ -244,6 +287,11 @@ match-centerof: function [pos /return [pair!]] [
             e/2/1 = 'box [ 
                 res:  closetobox? pos e/2/2 e/2/3
                 either res/1 [break/return  (line-midpoint e/2/2 e/2/3)]
+                             [pos]
+                         ]
+            e/2/1 = 'ellipse [ 
+                res:  closetoellipse? pos e/2/2 e/2/3
+                either res/1 [break/return  res/3]
                              [pos]
                          ]
             e/2/1 = 'arc [ 

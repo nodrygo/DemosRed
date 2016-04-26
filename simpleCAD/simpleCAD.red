@@ -106,7 +106,7 @@ entcolor:  [pen (current/fgcolor)  Fill-pen (current/setbg) Line-width (current/
 entline:      [line 0x0 0x0] 
 entcircle:    [circle 0x0 1]
 entbox:       [box 0x0 0x0]
-entarc:       [arc 0x0 1 0 260]
+entarc:       [arc 0x0 0x0 0 90]
 entellipse:   [ellipse 0x0 1x1]
 entspline:    [spline 0x0 1x1 ]
 
@@ -174,12 +174,12 @@ dragent: context [
                         'box       [setentpt nbclick + 1 pos]
                         'arc       [newval:  switch/default nbclick + 1 [
                                               2  [ absolute (dragent/start - pos)]
-                                              3  [ angle dragent/start pos]
-                                              4  [ angle dragent/start pos]
+                                              3  [ angle360 tmplist/2/2 pos]
+                                              4  [ angle360 tmplist/2/2  pos]
                                              ][pos]
                                     setentpt nbclick + 1 newval
                                     ]
-                        'ellipse        [setentpt nbclick + 1 absolute (dragent/start - pos)]
+                        'ellipse        [setentpt nbclick + 1 absolute (dragent/start - pos) ]]
                         'spline         [setentpt nbclick + 1 pos]
                       ]
                     updateelist
