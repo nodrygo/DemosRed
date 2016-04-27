@@ -60,15 +60,8 @@ current: context [
 
 
 entities: context [
-    drlist: [ ;[pen red    Line-width 2 ]
-              ;[spline 94x157 165x67 519x118 521x213 closed]
-              ;[pen red   Fill-pen off Line-width 2 line 10x10 100x100] 
-              ;[pen green Fill-pen green Line-width 2   circle 110x130 50] 
-              ;[pen blue  Fill-pen blue Line-width 4 line 30x30 200x150]
-              ;[pen blue  Fill-pen off Line-width 4 circle 100x150 20] 
-              ;[pen blue  Fill-pen off Line-width 4 arc 100x100 100x150 0 180] 
-            ] 
-    drgrid: []  
+    drlist: copy [] 
+    drgrid: copy []  
 
     redrawgrid: function [][setgrid current/grid?]
     setgrid:    function [mode] [ either mode [ buildgrid ][clear self/drgrid ]]
@@ -95,11 +88,6 @@ entities: context [
     add:     function [e] [append drlist e]
     remove:  function [id] [drlist/:id: 'none]
     replace: function [id e] [drlist/:id: e]
-    ;moveto:   function [ pt [point!] e] [
-    ;] 
-    ;drawhandle: [] function [] [
-    ;          [foreach e in drlist draw square at end] 
-    ;]
 ]
 
 entcolor:  [pen (current/fgcolor)  Fill-pen (current/setbg) Line-width (current/linesize) line-cap (reduce current/endline) line-join ( reduce current/joinline)]
@@ -179,14 +167,11 @@ dragent: context [
                                              ][pos]
                                     setentpt nbclick + 1 newval
                                     ]
-                        'ellipse        [setentpt nbclick + 1 absolute (dragent/start - pos) ]]
+                        'ellipse        [setentpt nbclick + 1 (absolute (dragent/start - pos)) ]
                         'spline         [setentpt nbclick + 1 pos]
                       ]
                     updateelist
-                   ] [ system/view/auto-sync?: off
-                       if nbclick = 0 [clear elist append elist compose [pen black fill-pen red circle (pos) 4 ]]
-                       system/view/auto-sync?: on 
-                       show basefg
+                   ] [ if nbclick = 0 [clear elist append elist compose [pen black fill-pen red circle (pos) 4 ]]
                        ]
             ]
     prepareent: func [pos][ ; print "prepare entitie"
@@ -197,15 +182,17 @@ dragent: context [
                   'box    [setmsg 1 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entbox)]]] 
                   'arc    [setmsg 3 nbpte: 4  append tmplist compose/deep [[(ecolor)][(entarc)]]]
                   'ellipse[setmsg 3 nbpte: 2  append tmplist compose/deep [[(ecolor)][(entellipse)]]]
-                  'poly   [setmsg 4 nbpte: 20 append tmplist compose/deep [[(ecolor)][(entspline)]]]
+                  'spline   [setmsg 4 nbpte: 20 append tmplist compose/deep [[(ecolor)][(entspline)]]]
                   ]
                 setentpt nbclick pos
                 updateelist
             ]
     setentpt: func [n pos][ ;print ["addentpt " n]
                 n: n + 1 
+                print [tmplist]
+                print[ n]
                 switch/default current/tool [
-                        'poly      [either n > (length? tmplist/2)[append tmplist/2 pos][tmplist/2/:n: pos]]
+                        'spline      [either n > (length? tmplist/2)[append tmplist/2 pos][tmplist/2/:n: pos]]
                         ][tmplist/2/:n: pos]
               ]
     updateelist: func[][
@@ -331,7 +318,7 @@ mainlayer: compose/deep [
 
          at 0x20  basebg: base   300x480      white  all-over draw entities/drlist 
          at 0x20  basegrid: base 300x480 transwhite  all-over draw entities/drgrid
-         at 0x20  basefg: base   300x480 transwhite  all-over draw dragent/elist 
+         at 0x20  basefg: base   300x480 transwhite  all-over draw dragent/elist on-key [current/lastkey: event/key 'done ]
      ]                        
 ]
 
