@@ -189,8 +189,6 @@ dragent: context [
             ]
     setentpt: func [n pos][ ;print ["addentpt " n]
                 n: n + 1 
-                print [tmplist]
-                print[ n]
                 switch/default current/tool [
                         'spline      [either n > (length? tmplist/2)[append tmplist/2 pos][tmplist/2/:n: pos]]
                         ][tmplist/2/:n: pos]
@@ -318,7 +316,7 @@ mainlayer: compose/deep [
 
          at 0x20  basebg: base   300x480      white  all-over draw entities/drlist 
          at 0x20  basegrid: base 300x480 transwhite  all-over draw entities/drgrid
-         at 0x20  basefg: base   300x480 transwhite  all-over draw dragent/elist on-key [current/lastkey: event/key 'done ]
+         at 0x20  basefg: base   300x480 transwhite  all-over draw dragent/elist on-key [ current/lastkey: event/key 'done ]
      ]                        
 ]
 
@@ -372,6 +370,7 @@ mainwin/actors: context [
                                                                 ]
                 on-close:  func  [face [object!] evt [event!]] [ print "win closed"]
                 on-key-down: func [face [object!] event [event!]][current/lastkey: event/key
+                                                                   ;print ["EVENT IN " event/window] ; useless
                                                                   'done ]
 
            ]
