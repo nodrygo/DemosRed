@@ -97,7 +97,7 @@ entbox:       [box 0x0 0x0]
 entarc:       [arc 0x0 0x0 0 90]
 entellipse:   [ellipse 0x0 1x1]
 entspline:    [spline 0x0 1x1 ]
-
+curspos: [pen black fill-pen red circle (pos) 4 ]
 
 dragent: context [
     elist: []
@@ -115,7 +115,7 @@ dragent: context [
                 dragent/running: true
                 if current/seltype = 'none 
                    [if nbclick = 1 [dragent/start: pos clear tmplist prepareent pos] ]
-                updateelist
+                updateelist pos
             ]
     dragend:  does [ ; print ["ENTER DRAGEND closed?" current/closed  "  " tmplist/2]  
                 if nbclick  >=  nbpte  [dragent/running: false 
@@ -135,6 +135,7 @@ dragent: context [
             ]
     dragmove: func [pos /local newval] [ ; print ["DRAGMOVE" current/seltype "  POS" pos] 
                 ;print [ "DRAGMOVE CURRENT KEY " mold current/lastkey]
+                system/view/auto-sync?: off
                 pos: snapto current/snap current/gridsize pos
                 if current/lastkey =  #"^[" [ dragent/running: false
                                               current/lastkey: "" 
@@ -155,7 +156,7 @@ dragent: context [
                                                       dragend
                                                     ]
                                             ]
-                either dragent/running  [
+                if dragent/running  [
                     switch current/tool [
                         'line      [setentpt nbclick + 1 pos]
                         'circle    [setentpt nbclick + 1 distance dragent/start pos ] 
@@ -167,12 +168,12 @@ dragent: context [
                                              ][pos]
                                     setentpt nbclick + 1 newval
                                     ]
-                        'ellipse        [setentpt nbclick + 1 (absolute (dragent/start - pos)) ]
-                        'spline         [setentpt nbclick + 1 pos]
-                      ]
-                    updateelist
-                   ] [ if nbclick = 0 [clear elist append elist compose [pen black fill-pen red circle (pos) 4 ]]
-                       ]
+                        'ellipse   [setentpt nbclick + 1 (absolute (dragent/start - pos)) ]
+                        'spline    [setentpt nbclick + 1 pos]
+                      ]] 
+                updateelist pos
+                system/view/auto-sync?: on
+                show drpanel
             ]
     prepareent: func [pos][ ; print "prepare entitie"
                 ecolor:  compose entcolor  
@@ -185,7 +186,7 @@ dragent: context [
                   'spline   [setmsg 4 nbpte: 20 append tmplist compose/deep [[(ecolor)][(entspline)]]]
                   ]
                 setentpt nbclick pos
-                updateelist
+                updateelist pos
             ]
     setentpt: func [n pos][ ;print ["addentpt " n]
                 n: n + 1 
@@ -193,9 +194,12 @@ dragent: context [
                         'spline      [either n > (length? tmplist/2)[append tmplist/2 pos][tmplist/2/:n: pos]]
                         ][tmplist/2/:n: pos]
               ]
-    updateelist: func[][
+    updateelist: func[pos][
                clear elist
-               unless tmplist = [] [append elist tmplist]
+               append elist compose [pen black Line-width 1 fill-pen red circle (pos) 4 ] 
+               unless tmplist = [] [append elist tmplist 
+                                    if all [nbclick >= 1 not(current/tool = 'line) ] [append elist compose [line (tmplist/2/2)  (pos)]] 
+                                    ]
               ]
 ]
 
