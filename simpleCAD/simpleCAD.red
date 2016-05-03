@@ -29,8 +29,8 @@ comment {
 }
 
 ; #include %commonlib.red
-either file? %commonlib.red [do %commonlib.red ]
-                            [do % https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleCAD/commonlib.red]
+either exists? %commonlib.red [do %commonlib.red ]
+                              [do read https://raw.githubusercontent.com/nodrygo/DemosRed/master/simpleCAD/commonlib.red]
 
 
 
@@ -109,6 +109,7 @@ dragent: context [
     running: false
 
     dragstart: func [pos] [ ; print ["ENTER DRAGSTART " ]
+                if current/seltype <> 'none [exit]
                 pos: snapto current/snap current/gridsize pos
                 current/lastkey: 'none
                 nbclick: nbclick + 1 
@@ -137,11 +138,7 @@ dragent: context [
                 ;print [ "DRAGMOVE CURRENT KEY " mold current/lastkey]
                 system/view/auto-sync?: off
                 pos: snapto current/snap current/gridsize pos
-                if current/lastkey =  #"^[" [ dragent/running: false
-                                              current/lastkey: "" 
-                                              nbclick: 0
-                                              clear tmplist clear elist
-                                            ]
+                if current/lastkey =  #"^[" [ cleardrag ]
                 if current/lastkey =  #"^M"[  if all [ 
                                                        current/tool = 'spline
                                                        dragent/running: true
@@ -201,6 +198,12 @@ dragent: context [
                                     if all [nbclick >= 1 not(current/tool = 'line) ] [append elist compose [line (tmplist/2/2)  (pos)]] 
                                     ]
               ]
+    cleardrag: func[][
+                dragent/running: false
+                current/lastkey: "" 
+                nbclick: 0
+                clear tmplist clear elist
+            ]
 ]
 
 setmsg: func [x] [
@@ -209,6 +212,7 @@ setmsg: func [x] [
              2 [instructions/text:  "click to select center (escape to quit)"]
              3 [instructions/text:  "click to select radius (escape to quit)"]
              4 [instructions/text:  "click to select next point(escape to quit/ enter to finish)"]
+             5 [instructions/text:  "WARNING: TO BE DONE  "]
        ]
 ]
 
@@ -241,11 +245,11 @@ snap-bar: [
 sel-bar: [
     group-box "SELECT"  [ 
     return
-    radio "none"        50x15 data true [current/tool: 'point] return
-    radio "all"         50x15 [current/tool: 'point] return
-    radio "point"       50x15 [current/tool: 'point] return
-    radio "insideRect"  50x15 [current/tool: 'inside] return
-    radio "overlapRect" 50x15 [current/tool: 'overlap] 
+    radio "none"        50x15 data true [setmsg 1 dragent/cleardrag current/seltype: 'none] return
+    radio "all"         50x15 [setmsg 5 dragent/cleardrag current/seltype: 'selall] return
+    radio "point"       50x15 [setmsg 5 dragent/cleardrag current/seltype: 'selpoint] return
+    radio "insideRect"  50x15 [setmsg 5 dragent/cleardrag current/seltype: 'selinside] return
+    radio "overlapRect" 50x15 [setmsg 5 dragent/cleardrag current/seltype: 'seloverlap] 
     ]
 ]
 

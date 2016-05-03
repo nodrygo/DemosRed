@@ -5,7 +5,7 @@ deltaclosest: 8
 
 comment {
     ;rewrite it more generic 
-distance: function [p1 [pair!] p2 [pair!] /return [integer!]][
+distance: function [p1 [pair!] p2 [pair!] return:  [integer!]][
    x:  p2/x - p1/x 
    y:  p2/y - p1/y 
    to integer! square-root ((x * x) + (y * y)) 
@@ -17,10 +17,10 @@ distance 10x10 20x20
 distance 20x20 10x10
 }
 
-angle: function [pc [pair!] pr [pair!] /return [integer!]][
+angle: function [pc [pair!] pr [pair!] return:  [integer!]][
    alpha:   to integer! (arctangent2 pr/y - pc/y  pr/x - pc/x) * (180 / pi)
 ]
-angle360: function [pc [pair!] pr [pair!] /return [integer!]][
+angle360: function [pc [pair!] pr [pair!] return:  [integer!]][
    ; consider inverted axis 
    alpha:   angle pc pr 
    alpha: either alpha < 0.0 [ 360 + alpha ] [ alpha ] 
@@ -34,7 +34,7 @@ angle360: function [pc [pair!] pr [pair!] /return [integer!]][
 ;angle 100x100 -100x100
 ;angle 100x100 100x-100 
 
-snapto:  function [snapmode gridsize pos [pair!]  /return [pair!] ] [
+snapto:  function [snapmode gridsize pos [pair!]  return:  [pair!] ] [
          e?: either (length? entities/drlist) > 0 [true][false]
          switch/default snapmode [
                                 'none         [pos]
@@ -46,15 +46,15 @@ snapto:  function [snapmode gridsize pos [pair!]  /return [pair!] ] [
          ][pos]
 ]
 
-i2f: func [x /return [floas=t!]] [to float! x]
+i2f: func [x return:  [float!]] [to float! x]
 
-dotv: function [a [pair!] b [pair!]  /return [float!]][
+dotv: function [a [pair!] b [pair!]  return:  [float!]][
       (i2f a/x * i2f b/x) + ( i2f a/y * i2f b/y)
 ]
-norm:  function [a [pair!] /return [integer!]][
+norm:  function [a [pair!] return:  [integer!]][
       to integer! square-root dotv a a 
 ]
-distance:  function [a [pair!] b [pair!] /return [integer!]][
+distance:  function [a [pair!] b [pair!] return:  [integer!]][
       norm (a - b)
 ]
 comment {
@@ -66,7 +66,7 @@ distance -20x10 -30x10
 distance  0x100 0x-50
 }
 
-inbound?: function [pos [pair!] a [pair!] b [pair!]  /return [logic!]][
+inbound?: function [pos [pair!] a [pair!] b [pair!]  return:  [logic!]][
   either a/x > b/x [minx: b/x  - deltaclosest  
                     maxx: a/x  + deltaclosest ]
                    [minx: a/x  - deltaclosest 
@@ -83,7 +83,7 @@ inbound?: function [pos [pair!] a [pair!] b [pair!]  /return [logic!]][
       ]
 ]
 ;;;; add limit to bound of rect entite
-closest-point-line: function [pos [pair!] a [pair!] b [pair!]  /return [[integer!] [pair!] [integer!]]][
+closest-point-line: function [pos [pair!] a [pair!] b [pair!]  return:  [[integer!] [pair!] [integer!]]][
    ;from http://www.faqs.org/faqs/graphics/algorithms-faq/
         c1: (i2f pos/x - i2f  a/x) * (i2f  b/x - i2f  a/x)  
         c2: (i2f pos/y - i2f  a/y) * (i2f  b/y - i2f  a/y) 
@@ -107,28 +107,28 @@ closest-point-line 10x40 0x0 40x40
 closest-point-line 100x400 0x0 40x40
 }
 
-point-closeto-line?: function [pos [pair!] p2 [pair!] p3 [pair!]  /return [logic!]][
+point-closeto-line?: function [pos [pair!] p2 [pair!] p3 [pair!]  return:  [logic!]][
     cpl:  closest-point-line pos p2 p3
     cpl/1 <= deltaclosest
 ]
 
-line-midpoint: function [p1 [pair!] p2 [pair!]  /return [pair!]][
+line-midpoint: function [p1 [pair!] p2 [pair!]  return:  [pair!]][
         mx: (p1/x + p2/x) / 2
         my: (p1/y + p2/y) / 2  
         as-pair mx my 
 ]
 
-box-midpoint: function [pos [pair!] p1 [pair!] p2 [pair!]  /return [pair!]][
+box-midpoint: function [pos [pair!] p1 [pair!] p2 [pair!]  return:  [pair!]][
         res: closetobox? pos p1 p2 
         if res/3 [ line-midpoint p1 p2 ]
         pos
 ]
-closetoradius?: function [pos [pair!] pc [pair!] r [integer!] /return [logic!]][
+closetoradius?: function [pos [pair!] pc [pair!] r [integer!] return:  [logic!]][
     ; p1= point p2=centre  r=rayon 
     all [(distance pos pc) + deltaclosest >= r  (distance pos pc) - deltaclosest <= r ]
 ]
 
-closetocircle?: function [pos [pair!] pc [pair!] r [integer!] /return [[logic!] [pair!]]][
+closetocircle?: function [pos [pair!] pc [pair!] r [integer!] return:  [[logic!] [pair!]]][
     ; p1= point p2=centre  r=rayon  return 1/boolean 2/pos on circle 
     either (closetoradius?  pos pc r ) [ a: angle360 pc pos 
                                          nx: ((cosine a) * r) + pc/x 
@@ -211,21 +211,21 @@ closetobox?:  function [pos [pair!] p1 [pair!]  p3 [pair!] return: [[logic!] [pa
 
 
 ;;; NAIVE SNAP MODE 
-match-closeendline: function [pos /return [pair!]] [
+match-closeendline: function [pos return:  [pair!]] [
     foreach e entities/drlist [ 
         unless e = [] [
         case [
             e/2/1 = 'line [
                 res:  closest-point-line pos e/2/2 e/2/3
                 case [
-                  all [res/1 <= deltaclosest res/3 <= 0.5] [break/return e/2/2]
-                  all [res/1 <= deltaclosest res/3 >  0.5] [break/return e/2/3]
+                  all [res/1 <= deltaclosest res/3 <= 0.5] [breakreturn:  e/2/2]
+                  all [res/1 <= deltaclosest res/3 >  0.5] [breakreturn:  e/2/3]
                   true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
                 ;print ["ENDLINE RES:" res]
-                either res/1 [break/return res/2]
+                either res/1 [breakreturn:  res/2]
                              [pos] 
                 ]
             true [pos]
@@ -233,18 +233,18 @@ match-closeendline: function [pos /return [pair!]] [
     ]]
 ]
 
-match-linemidpoint: function [pos /return [pair!]] [
+match-linemidpoint: function [pos return:  [pair!]] [
     foreach e entities/drlist [ 
         unless e = [] [
         case [
             e/2/1 = 'line [
                 case [
-                    (point-closeto-line? pos e/2/2  e/2/3 ) [break/return (line-midpoint e/2/2 e/2/3)]
+                    (point-closeto-line? pos e/2/2  e/2/3 ) [breakreturn:  (line-midpoint e/2/2 e/2/3)]
                     true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
-                either res/1 [break/return res/3]
+                either res/1 [breakreturn:  res/3]
                              [pos] 
                 ]
             true [pos] 
@@ -252,35 +252,35 @@ match-linemidpoint: function [pos /return [pair!]] [
     ]]
 ]
 
-match-closestpoint: function [pos /return [pair!]] [
+match-closestpoint: function [pos return:  [pair!]] [
     foreach e entities/drlist [
         unless e = [] [ 
         case [
             e/2/1 = 'line [
                 res:  closest-point-line pos e/2/2 e/2/3
                 case [
-                  all [res/1 <= deltaclosest res/3 <= 0.5] [break/return res/2]
-                  all [res/1 <= deltaclosest res/3 >  0.5] [break/return res/2]
+                  all [res/1 <= deltaclosest res/3 <= 0.5] [breakreturn:  res/2]
+                  all [res/1 <= deltaclosest res/3 >  0.5] [breakreturn:  res/2]
                   true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
-                either res/1 [break/return res/4]
+                either res/1 [breakreturn:  res/4]
                              [pos] 
                 ]
             e/2/1 = 'ellipse [ 
                 res:  closetoellipse? pos e/2/2 e/2/3
-                either res/1 [break/return  res/2]
+                either res/1 [breakreturn:   res/2]
                              [pos]
                          ]
             e/2/1 = 'circle [
                 res:  closetocircle? pos e/2/2 e/2/3
-                either res/1 [break/return res/2]
+                either res/1 [breakreturn:  res/2]
                              [pos] 
                 ]
             e/2/1 = 'arc [ 
                 res:  closetoarcradius? pos e/2/2 e/2/3 e/2/4 e/2/5
-                either res/1 [break/return  res/2]
+                either res/1 [breakreturn:   res/2]
                              [pos]
                          ]
             true [pos] 
@@ -288,28 +288,28 @@ match-closestpoint: function [pos /return [pair!]] [
     ]]
 ]
 
-match-centerof: function [pos /return [pair!]] [
+match-centerof: function [pos return:  [pair!]] [
     foreach e entities/drlist [
     unless e = [] [
         case [
             e/2/1 = 'circle [ 
                           case [
-                           (closetoradius? pos e/2/2 e/2/3) [break/return e/2/2]
+                           (closetoradius? pos e/2/2 e/2/3) [breakreturn:  e/2/2]
                            true [pos] 
                          ]]
             e/2/1 = 'box [ 
                 res:  closetobox? pos e/2/2 e/2/3
-                either res/1 [break/return  (line-midpoint e/2/2 e/2/3)]
+                either res/1 [breakreturn:   (line-midpoint e/2/2 e/2/3)]
                              [pos]
                          ]
             e/2/1 = 'ellipse [ 
                 res:  closetoellipse? pos e/2/2 e/2/3
-                either res/1 [break/return  res/3]
+                either res/1 [breakreturn:   res/3]
                              [pos]
                          ]
             e/2/1 = 'arc [ 
                 res:  closetoarcradius? pos e/2/2 e/2/3 e/2/4 e/2/5
-                either res/1 [break/return  res/3]
+                either res/1 [breakreturn:   res/3]
                              [pos]
                          ]
             true [pos]

@@ -15,8 +15,11 @@ or if you want a gui
 
 ### unfinished simpleCAD demo
 
-A lot of good CAD already exist so this demo is only to learn Red and nothing else.    
-basic [screen shot](https://github.com/nodrygo/DemosRed/blob/master/simpleCAD/images/redbicycle.png)
+A lot of good CAD already exist so this demo is only an attempt for me to learn Red and nothing else    
+Because this is my first big code this is really bad written and not idiomatic of good Red code. If I was doing it again I'll probably rewrite it differently
+
+basic [screen shot here](https://github.com/nodrygo/DemosRed/blob/master/simpleCAD/images/redbicycle.png)
+
 
 ### Why 
 
