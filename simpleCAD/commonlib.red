@@ -83,7 +83,7 @@ inbound?: function [pos [pair!] a [pair!] b [pair!]  return:  [logic!]][
       ]
 ]
 ;;;; add limit to bound of rect entite
-closest-point-line: function [pos [pair!] a [pair!] b [pair!]  return:  [[integer!] [pair!] [integer!]]][
+closest-point-line: function [pos [pair!] a [pair!] b [pair!]  ][
    ;from http://www.faqs.org/faqs/graphics/algorithms-faq/
         c1: (i2f pos/x - i2f  a/x) * (i2f  b/x - i2f  a/x)  
         c2: (i2f pos/y - i2f  a/y) * (i2f  b/y - i2f  a/y) 
@@ -128,7 +128,7 @@ closetoradius?: function [pos [pair!] pc [pair!] r [integer!] return:  [logic!]]
     all [(distance pos pc) + deltaclosest >= r  (distance pos pc) - deltaclosest <= r ]
 ]
 
-closetocircle?: function [pos [pair!] pc [pair!] r [integer!] return:  [[logic!] [pair!]]][
+closetocircle?: function [pos [pair!] pc [pair!] r [integer!] ][
     ; p1= point p2=centre  r=rayon  return 1/boolean 2/pos on circle 
     either (closetoradius?  pos pc r ) [ a: angle360 pc pos 
                                          nx: ((cosine a) * r) + pc/x 
@@ -174,7 +174,7 @@ closetoellipse?: function [pos [pair!] pu [pair!] pr [pair!] ][
                [ reduce [true  npt pc] ]
                [ reduce [false pos pos ] ] 
 ]
-closetoarcradius?: function [pos [pair!] pc [pair!] pr [pair!] a [integer!] b [integer!] return: [[logic!] [pair!][pair!]] ][
+closetoarcradius?: function [pos [pair!] pc [pair!] pr [pair!] a [integer!] b [integer!]  ][
     ; pos= point pc=centre  pr= point rayon a1=angle debut a2=fin arc 
     alpha:  angle360 pc pos 
     either all [(a + b) >= 360]  [as: either alpha < 180  [ alpha + a] [alpha] ae: alpha + 360  ][ae: alpha as: alpha]
@@ -189,7 +189,7 @@ closetoarcradius?: function [pos [pair!] pc [pair!] pr [pair!] a [integer!] b [i
                [ reduce [false pos pos ] ] 
 ]
 
-closetobox?:  function [pos [pair!] p1 [pair!]  p3 [pair!] return: [[logic!] [pair!] [pair!][pair!]]][
+closetobox?:  function [pos [pair!] p1 [pair!]  p3 [pair!] ][
      " return 1/check status 2/endpoint 3/midpoint 4/closest point for box "
      p2: as-pair p3/x p1/y
      p4: as-pair p1/x p3/y
@@ -218,14 +218,14 @@ match-closeendline: function [pos return:  [pair!]] [
             e/2/1 = 'line [
                 res:  closest-point-line pos e/2/2 e/2/3
                 case [
-                  all [res/1 <= deltaclosest res/3 <= 0.5] [breakreturn:  e/2/2]
-                  all [res/1 <= deltaclosest res/3 >  0.5] [breakreturn:  e/2/3]
+                  all [res/1 <= deltaclosest res/3 <= 0.5] [break/return  e/2/2]
+                  all [res/1 <= deltaclosest res/3 >  0.5] [break/return  e/2/3]
                   true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
                 ;print ["ENDLINE RES:" res]
-                either res/1 [breakreturn:  res/2]
+                either res/1 [break/return  res/2]
                              [pos] 
                 ]
             true [pos]
@@ -239,12 +239,12 @@ match-linemidpoint: function [pos return:  [pair!]] [
         case [
             e/2/1 = 'line [
                 case [
-                    (point-closeto-line? pos e/2/2  e/2/3 ) [breakreturn:  (line-midpoint e/2/2 e/2/3)]
+                    (point-closeto-line? pos e/2/2  e/2/3 ) [break/return  (line-midpoint e/2/2 e/2/3)]
                     true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
-                either res/1 [breakreturn:  res/3]
+                either res/1 [break/return  res/3]
                              [pos] 
                 ]
             true [pos] 
@@ -259,28 +259,28 @@ match-closestpoint: function [pos return:  [pair!]] [
             e/2/1 = 'line [
                 res:  closest-point-line pos e/2/2 e/2/3
                 case [
-                  all [res/1 <= deltaclosest res/3 <= 0.5] [breakreturn:  res/2]
-                  all [res/1 <= deltaclosest res/3 >  0.5] [breakreturn:  res/2]
+                  all [res/1 <= deltaclosest res/3 <= 0.5] [break/return  res/2]
+                  all [res/1 <= deltaclosest res/3 >  0.5] [break/return  res/2]
                   true [pos] 
                 ]]
             e/2/1 = 'box [
                 res:  closetobox? pos e/2/2 e/2/3
-                either res/1 [breakreturn:  res/4]
+                either res/1 [break/return  res/4]
                              [pos] 
                 ]
             e/2/1 = 'ellipse [ 
                 res:  closetoellipse? pos e/2/2 e/2/3
-                either res/1 [breakreturn:   res/2]
+                either res/1 [break/return   res/2]
                              [pos]
                          ]
             e/2/1 = 'circle [
                 res:  closetocircle? pos e/2/2 e/2/3
-                either res/1 [breakreturn:  res/2]
+                either res/1 [break/return  res/2]
                              [pos] 
                 ]
             e/2/1 = 'arc [ 
                 res:  closetoarcradius? pos e/2/2 e/2/3 e/2/4 e/2/5
-                either res/1 [breakreturn:   res/2]
+                either res/1 [break/return   res/2]
                              [pos]
                          ]
             true [pos] 
@@ -294,22 +294,22 @@ match-centerof: function [pos return:  [pair!]] [
         case [
             e/2/1 = 'circle [ 
                           case [
-                           (closetoradius? pos e/2/2 e/2/3) [breakreturn:  e/2/2]
+                           (closetoradius? pos e/2/2 e/2/3) [break/return  e/2/2]
                            true [pos] 
                          ]]
             e/2/1 = 'box [ 
                 res:  closetobox? pos e/2/2 e/2/3
-                either res/1 [breakreturn:   (line-midpoint e/2/2 e/2/3)]
+                either res/1 [break/return   (line-midpoint e/2/2 e/2/3)]
                              [pos]
                          ]
             e/2/1 = 'ellipse [ 
                 res:  closetoellipse? pos e/2/2 e/2/3
-                either res/1 [breakreturn:   res/3]
+                either res/1 [break/return   res/3]
                              [pos]
                          ]
             e/2/1 = 'arc [ 
                 res:  closetoarcradius? pos e/2/2 e/2/3 e/2/4 e/2/5
-                either res/1 [breakreturn:   res/3]
+                either res/1 [break/return   res/3]
                              [pos]
                          ]
             true [pos]
