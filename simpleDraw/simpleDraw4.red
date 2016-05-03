@@ -20,11 +20,7 @@ to-color: function [r g b][
     c
 ]
 
-loadimg: [imgname] [
-    either exist-file? append [%images/ imgname]
-                              [load append  https://raw.githubusercontent.com/nodrygo/DemosRed/master/ 'images/  imgname]
- 
-]
+
 
 to-percents: function [
     "Convert a color tuple to percent values"
@@ -33,6 +29,17 @@ to-percents: function [
     reduce [ to percent! (c/1 / 255.0) to percent! (c/2 / 255.0) to percent! (c/3 / 255.0) ]
 ]
 
+i2f: func [x return:  [float!]] [to float! x]
+
+dotv: function [a [pair!] b [pair!]  return:  [float!]][
+      (i2f a/x * i2f b/x) + ( i2f a/y * i2f b/y)
+]
+norm:  function [a [pair!] return:  [integer!]][
+      to integer! square-root dotv a a 
+]
+distance:  function [a [pair!] b [pair!] return:  [integer!]][
+      norm (a - b)
+]
 entities: object [
     size: 1
     number: 0
@@ -46,14 +53,13 @@ entities: object [
     addline:    func [ pos ] [ either penstatus = 'up  [ compose startline] 
                                                        [ compose [(pos)] ]
                              ]
-    addpt:      func [ pos ] [  delta: absolute(pos - startpos)
-                                maxdelta: make pair! reduce [size + 5 size + 5]
-                                if delta > maxdelta [  
+    addpt:      func [ pos ] [  delta: distance startpos pos
+                                if delta < (delta + size + 2 ) [  
                                      if firstpt [ append elist prepareline  firstpt: false]
                                      append elist compose [(pos)]
                                 ]
                               penstatus: 'down
-                              ;print ["ENTITIES LIST:" elist]
+                              ;;print ["pos" pos "  startpos" startpos "  delta" delta  "ENTITIES LIST:" elist]
                              ]
     newline:    func [ pos ] [ 
                             penstatus: 'down 
@@ -62,7 +68,7 @@ entities: object [
                             prepareline: compose startline 
                              ]     
     setsize:    func [ x ] [ form size: max 1 to integer! 100 * x ]
-    reset:      does [ head clear at elist 5  self/number: 0 ]
+    reset:      does [clear entities/elist  self/number: 0 ]
 ]
 
 alertPOPUP: function [
@@ -113,7 +119,7 @@ view/no-wait [
     button "CLEAR"    100 [ entities/reset ]
     button "SAVE IMG" 100 [ save %dessin.png to-image b     alertPOPUP "DESSIN.PNG SAVED"]
     button "SAVE RED" 100 [ save %dessin.red entities/elist alertPOPUP "DESSIN.RED SAVED"]
-    button "LOAD RED" 100 [ attempt [entities/elist: b/draw: load %dessin.red] ]
+    button "LOAD RED" 100 [ clear entities/elist  attempt [entities/elist: b/draw: load %dessin.red] ]
 ]
 
 
