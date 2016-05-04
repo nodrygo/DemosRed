@@ -13,6 +13,7 @@ Red [
 ]
 
 samples: load https://raw.githubusercontent.com/nodrygo/DemosRed/master/demopath.red
+;;append samples ["Boucing ball" %/Z/devygo/red/win/DemosRed/simpleDraw/ballbounce.red]
 
 choose: func [n] [
     x: samples/(2 * n)
