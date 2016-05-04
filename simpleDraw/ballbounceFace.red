@@ -30,13 +30,17 @@ while [running] [
 ]
 
 ball: [[pen black fill-pen red] [circle 20x20 10]]
-view/no-wait [
+mainwin: layout [
     title "face bouncing ball"
     button "start" [changemode true moveball ] return 
     button "stop"  [changemode false ]
     panel 420x320 white [
-          b: base 40x40 transwhite  draw ball
+       at 80x20   b: base 40x40 transwhite  draw ball
     ]
 ]
-
- 
+ mainwin/actors: context [
+                on-close:  func  [face [object!] evt [event!]] [running: false 
+                                                                system/view/auto-sync?: yes]
+                on-over:   func  [face [object!] evt [event!]] [show b 'done]
+         ]
+view/no-wait/flags mainwin [modal]
