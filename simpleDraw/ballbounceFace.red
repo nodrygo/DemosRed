@@ -34,7 +34,7 @@ view/no-wait [
     title "face bouncing ball"
     button "start" [changemode true moveball ] return 
     button "stop"  [changemode false ]
-    panel 500x400 [
+    panel 420x320 white [
           b: base 40x40 transwhite  draw ball
     ]
 ]
