@@ -12,7 +12,7 @@ Red [
         Needs:   'view
 ]
 
-alertPOPUP: function [
+alert: function [
     "Displays an alert message"
     msg [string!]  "Message to display"
 ][
@@ -65,8 +65,9 @@ mainmenu: [
             "Help" [ "About"  about]
 ]
 mainwin: layout [
-    curdir: text  "." 500 bold font-size 12 font-color blue return 
-    text  "current file:" 120 bold font-size 12 font-color blue
+    style: txtinfo:  text bold font-size 12 font-color blue
+    txtinfo "Current Dir.:" curdir: txtinfo   "." 500 return 
+    txtinfo "Current file:" 120 
     curfilename: field "editest.red" 200 [current/filename: face/text] return
     codesrc: area 600x400 bold italic white font-color black font-size 14 
     do [curdir/text: copy mold get-current-dir
@@ -94,7 +95,7 @@ mainwin/actors: context [
                            'setbg-cyan [codesrc/color: cyan ]
                            'runsrc [attempt [do codesrc/text]]
                            'compilesrc [alert "ToBeDone"]
-                           'about [alertPOPUP "RED DEMO: SIMPLE EDITOR "]
+                           'about [alert "RED DEMO: SIMPLE EDITOR "]
                            'exit [quit]
                          ]
                 ]
