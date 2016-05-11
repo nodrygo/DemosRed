@@ -18,6 +18,8 @@ changemode: func [mode][
              ]
 ]
 
+playground: none
+
 ball: [[pen black fill-pen red] [circle 20x20 10]]
 
 mainwin: layout [
@@ -25,7 +27,7 @@ mainwin: layout [
     button "start" [changemode true moveball ] return 
     button "stop"  [changemode false ]
     playground: panel 420x320 white [
-       at 80x20   b: base 40x40 transwhite  draw ball
+       at 80x20   b: base 40x40 white  draw ball
     ]
 ]
 
@@ -45,4 +47,4 @@ while [running] [
                 on-close:  func  [face [object!] evt [event!]] [running: false 
                                                                 system/view/auto-sync?: yes]
          ]
-view mainwin 
+view/no-wait mainwin 

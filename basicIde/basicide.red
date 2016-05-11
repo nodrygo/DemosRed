@@ -35,12 +35,14 @@ alertPOPUP: function [
 current: context [
     bgcolor: black
     fgcolor: white
-    red: system/options/boot
+    red: "red.exe  "  ;--  system/options/boot
     curdirfiles: []
     modified: false
     target: "Windows"
-    cmd: "red "
+    cmd: ""
 ]
+
+if system/platform <> 'Windows [ current/red: "red  "  ]
 
 mainmenu: [
             "File" [
@@ -101,46 +103,57 @@ dirfiles: function [
     reslist
 ]
 
-loadfile: function [][ clear codesrc/text 
-                       fn: to file! curfilename/text
-                       if  exists? fn [codesrc/text: load mold (read fn)]
-                       current/modified: false]
+loadfile: does[ clear codesrc/text 
+                fn: to file! curfilename/text
+                if  exists? fn [codesrc/text: load mold (read fn)]
+                current/modified: false
+              ]
+savefile: does [write/binary (to file! curfilename/text) codesrc/text  current/modified: false]
 
 setcurdirfiles: does [current/curdirfiles: dirfiles ]
 
-execall: does [
+execall: function [waiting?] [
     "call red as external program red.exe must be in path"
     print ["CALL:" current/cmd]
     either current/modified [
                               alertPOPUP "Please save file before" 
                             ][
-                              attempt [call/wait/console current/cmd ]
+                              either waiting? [call/wait/console current/cmd ]
+                                              [pid: call/console current/cmd print["PID"pid]]
+                              
                             ]
 ]
 
 doextrun: does [
-                clear current/cmd
-                append current/cmd "red  "
-                append current/cmd curfilename/text
-                execall
+    clear current/cmd
+    append current/cmd current/red   ;--"red.exe  "
+    append current/cmd curfilename/text
+    execall false
 ]
 doextcompil: does [
-                clear current/cmd
-                append current/cmd "red -c -t "
-                append current/cmd current/target
-                either modedebug/data [append current/cmd " -d "][append current/cmd " "]
-                append current/cmd curfilename/text
-                execall 
+    clear current/cmd
+    append current/cmd current/red   ;--"red.exe  "
+    append current/cmd " -c -t "
+    append current/cmd current/target
+    either modedebug/data [append current/cmd " -d "][append current/cmd " "]
+    append current/cmd curfilename/text
+    execall true
 ]
-
+calcresize: does [
+    newsize: mainwin/size - codesrc/offset
+    codesrc/size: newsize - 10x110
+]
 comptype-bar: [
     group-box "Compile Target type"  [ 
     return
-    radio "windowsXP" 80x15 data true [current/target: "windowsXP"] return
-    radio "windows"   80x15  [current/target: "windows"] return
-    radio "Linux"     80x15  [current/target: "Linux"] return
-    radio "Macos"     80x15  [current/target: "Macos"] return
-    modedebug: check "debug"    50x15    
+    radio "windowsXP"  80x15 data true [current/target: "windowsXP"] return
+    radio "windows"    80x15  [current/target: "windows"] return
+    radio "Linux"      80x15  [current/target: "Linux"] return
+    radio "Linux-ARM"  80x15  [current/target: "Linux-ARM"] return
+    radio "RPi"        80x15  [current/target: "RPi"] return
+    radio "Darwin"     80x15  [current/target: "Darwin"] return
+    radio "Android"    80x15  [current/target: "Android"] return
+    modedebug: check "debug"    80x15    return
     ]
 ] 
 
@@ -154,7 +167,7 @@ mainwin: layout compose/deep[
            ]
     below
     panel [ below
-          codesrc: area 600x400 bold italic white font-color black font-size 14  on-change[ current/modified: true]
+          codesrc: area 600x600 bold italic white font-color black font-size 14  on-change[ current/modified: true]
           ]
     panel [
           codeerr: area 400x100 bold italic white font-color black font-size 14  
@@ -166,35 +179,35 @@ mainwin: layout compose/deep[
 mainwin/menu: mainmenu
 
 mainwin/actors: context [
-                on-menu: func [face [object!] event [event!]][
-                        switch event/picked [
-                           'fnew   [clear codesrc/text ] 
-                           'fopen  [loadfile] 
-                           'fsave  [write/binary %xx.rr codesrc/text  current/modified: false] 
-                           'setfont8  [codesrc/font/size: 8 ]
-                           'setfont10 [codesrc/font/size: 10 ]
-                           'setfont12 [codesrc/font/size: 12 ]
-                           'setfont14 [codesrc/font/size: 14 ]
-                           'setfg-black [codesrc/font/color: black ]
-                           'setfg-white [codesrc/font/color: white ]
-                           'setfg-red [codesrc/font/color: red ]
-                           'setfg-blue [codesrc/font/color: blue ]
-                           'setbg-black [codesrc/color: black ]
-                           'setbg-white [codesrc/color: white ]
-                           'setbg-cyan [codesrc/color: cyan ]
-                           'setbg-forest [codesrc/color: forest ]
-                           'setbg-olive [codesrc/color: olive ]
-                           'setbg-water [codesrc/color: water ]
-                           'runsrc [attempt [do codesrc/text]]
-                           'runextsrc  [doextrun]
-                           'compilesrc [doextcompil  alertPOPUP "finished"]
-                           'about [alertPOPUP "RED DEMO: SIMPLE EDITOR "]
-                           'exit [quit]
-                         ]
-                ]
-                on-resize:   func  [face [object!] event [event!]] [ codesrc/size: mainwin/size - 20x10 ]
-                on-close:    func  [face [object!] event [event!]] [quit]
-                on-key-down: func [face [object!] event [event!]]['done]
-           ]
+    on-menu: func [face [object!] event [event!]][
+        switch event/picked [
+           'fnew   [clear codesrc/text ] 
+           'fopen  [loadfile] 
+           'fsave  [savefile] 
+           'setfont8  [codesrc/font/size: 8 ]
+           'setfont10 [codesrc/font/size: 10 ]
+           'setfont12 [codesrc/font/size: 12 ]
+           'setfont14 [codesrc/font/size: 14 ]
+           'setfg-black [codesrc/font/color: black ]
+           'setfg-white [codesrc/font/color: white ]
+           'setfg-red [codesrc/font/color: red ]
+           'setfg-blue [codesrc/font/color: blue ]
+           'setbg-black [codesrc/color: black ]
+           'setbg-white [codesrc/color: white ]
+           'setbg-cyan [codesrc/color: cyan ]
+           'setbg-forest [codesrc/color: forest ]
+           'setbg-olive [codesrc/color: olive ]
+           'setbg-water [codesrc/color: water ]
+           'runsrc [attempt [do codesrc/text]]
+           'runextsrc  [doextrun]
+           'compilesrc [doextcompil  alertPOPUP "finished"]
+           'about [alertPOPUP "RED DEMO: SIMPLE EDITOR "]
+           'exit [quit]
+         ]
+    ]
+    on-resize:   func  [face [object!] event [event!]] [ calcresize ]
+    on-close:    func  [face [object!] event [event!]] [quit]
+    on-key-down: func [face [object!] event [event!]]['done]
+    ]
 
 view/flags mainwin [resize]
