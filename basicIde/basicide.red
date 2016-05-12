@@ -20,6 +20,8 @@ comment {
 
 #include %../../red/system/library/call/call.red 
 
+;-- system/view/debug?: yes
+
 alertPOPUP: function [
     "Displays an alert message"
     msg [string!]  "Message to display"
@@ -213,7 +215,7 @@ mainwin/actors: context [
          ]
     ]
     on-resize:   func  [face [object!] event [event!]] [ calcresize ]
-    on-close:    func  [face [object!] event [event!]] [quit]
+    ;;;on-close:    func  [face [object!] event [event!]] [quit]
     on-key-down: func [face [object!] event [event!]]['done]
     ]
 
