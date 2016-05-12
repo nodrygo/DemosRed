@@ -12,7 +12,7 @@ Red [
 ]
 
 comment {
-**WARNING**Red is far to be finished and still lack a lot of things so this code is a lot prematured and only for fun
+**WARNING**Red is far to be finished and still lack a lot of things so this code is a lot prematured and only for fun main lack for RED GC IO better CALL 
  NEED TO BE COMPILED TO WORK (add CALL RED)
  !!!! this is a BIG HACK you are warned !!!!!!
   Adapt include below to your path
@@ -35,7 +35,8 @@ alertPOPUP: function [
 current: context [
     bgcolor: black
     fgcolor: white
-    red: "red.exe  "  ;--  system/options/boot
+    red: "red.exe  "
+    redboot:  system/options/boot
     curdirfiles: []
     modified: false
     target: "Windows"
@@ -112,24 +113,27 @@ savefile: does [write/binary (to file! curfilename/text) codesrc/text  current/m
 
 setcurdirfiles: does [current/curdirfiles: dirfiles ]
 
-execall: function [waiting?] [
+execall: does [
     "call red as external program red.exe must be in path"
-    print ["CALL:" current/cmd]
     either current/modified [
                               alertPOPUP "Please save file before" 
-                            ][
-                              either waiting? [call/wait/console current/cmd ]
-                                              [pid: call/console current/cmd print["PID"pid]]
-                              
+                            ][ attempt [
+                                   pid: call/console current/cmd  
+                                   append codeerr/text (append  copy "^/START PID:" form pid)
+                                   ]
                             ]
 ]
+
+dolocalrun: does[ attempt [do codesrc/text]]
 
 doextrun: does [
     clear current/cmd
     append current/cmd current/red   ;--"red.exe  "
     append current/cmd curfilename/text
-    execall false
+    codeerr/text:  current/cmd 
+    execall 
 ]
+
 doextcompil: does [
     clear current/cmd
     append current/cmd current/red   ;--"red.exe  "
@@ -137,12 +141,15 @@ doextcompil: does [
     append current/cmd current/target
     either modedebug/data [append current/cmd " -d "][append current/cmd " "]
     append current/cmd curfilename/text
-    execall true
+    codeerr/text:  current/cmd
+    execall 
 ]
+
 calcresize: does [
     newsize: mainwin/size - codesrc/offset
     codesrc/size: newsize - 10x110
 ]
+
 comptype-bar: [
     group-box "Compile Target type"  [ 
     return
@@ -198,7 +205,7 @@ mainwin/actors: context [
            'setbg-forest [codesrc/color: forest ]
            'setbg-olive [codesrc/color: olive ]
            'setbg-water [codesrc/color: water ]
-           'runsrc [attempt [do codesrc/text]]
+           'runsrc [dolocalrun]
            'runextsrc  [doextrun]
            'compilesrc [doextcompil  alertPOPUP "finished"]
            'about [alertPOPUP "RED DEMO: SIMPLE EDITOR "]
