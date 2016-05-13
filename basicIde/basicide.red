@@ -12,8 +12,8 @@ Red [
 ]
 
 comment {
-**WARNING**Red is far to be finished and still lack a lot of things so this code is a lot prematured and only for fun main lack for RED GC IO better CALL 
- NEED TO BE COMPILED TO WORK (add CALL RED)
+**WARNING**Red is far to be finished and still lack a lot of things so this code is prematured and only for fun (main lack for RED GC IO better CALL )
+ NEED TO BE COMPILED TO WORK with RUN external and compile 
  !!!! this is a BIG HACK you are warned !!!!!!
   Adapt include below to your path
 }
@@ -21,7 +21,6 @@ comment {
 #include %../../red/system/library/call/call.red 
 
 ;-- system/view/debug?: yes
-
 
 alertPOPUP: function [
     "Displays an alert message"
@@ -89,18 +88,8 @@ mainmenu: [
             "Help" [ "About"  about]
 ]
 
-comment{
-adderr: function [x] [
-    ; add detail in codeerr area
-    unless x = none [
-       case  [  
-                type? x  = string! [append codeerr/text x ] 
-                type? x  = list! [for each y x [adder y]] 
-                true  [append codeerr/text form x ]
-            ] 
-    ] 
-]
-}
+
+
 
 dirfiles: function [
     "select files and return list (poor copy from original file)"
@@ -120,13 +109,14 @@ dirfiles: function [
     reslist
 ]
 
-loadfile: does[ print "entrée de LOADFILE"
-                clear codesrc/text 
+loadfile: does[ print ["LOADFILE " curfilename/text ]
                 fn: to file! curfilename/text
-                if  exists? fn [codesrc/text: load mold (read fn)]
+                ;--if exists? fn [codesrc/text: replace/all read fn "^/" "^/"]
+                if exists? fn [codesrc/text:  read  fn]
                 current/modified: false
-                print "sortie de LOADFILE"
+                if codesrc/text = none [print "WARNING CODSRC/TEXT IS NONE"]
               ]
+
 savefile: does [write/binary (to file! curfilename/text) codesrc/text  current/modified: false]
 
 setcurdirfiles: does [current/curdirfiles: dirfiles ]
@@ -145,14 +135,10 @@ execall: does [
 src: ""
 dolocalrun: does[ 
                   either  codesrc/text <> none [
-                     print ["Enter DOLOCAL" curfilename/text] 
-                     clear src
-                     src: copy codesrc/text
-                     unless src = none [attempt [do src]]
-                     print "Sortie de DOLOCAL"
-                     wait 0.1
-                 ][
-                  print "CODESRC/TEXT is NONE trying to RELOAD FILE  "  loadfile
+                     print ["RUN " curfilename/text] 
+                     attempt [do codesrc/text]
+                  ][
+                     print "CODESRC/TEXT is NONE please try to RELOAD FILE  " 
                   ]
 ]
 
@@ -199,35 +185,34 @@ mainwin: layout compose/deep[
     txtinfo "Current Dir.:"  curdir: txtinfo "" 300  return 
     curfilename: field "defaulteditest.red" 200  return
     panel [ below
-           flist: text-list on-change [curfilename/text: current/curdirfiles/(face/selected) loadfile]
+           flist: text-list on-change [curfilename/text: pick current/curdirfiles face/selected loadfile]
            (comptype-bar)
            ]
     below
-    panel [ below
-          codesrc: area 600x600 bold italic white font-color black font-size 14  on-change[ current/modified: true]
+    panel [ 
+          codesrc: area 600x400 bold italic white font-color black font-size 14  on-change[ current/modified: true]
           ]
     panel [
-          codeerr: area 400x100 bold italic white font-color black font-size 14  
-          button "clear err" [clear codeerr/text] 
+          panout: area 550x200 bold italic white font-color black font-size 14  
+          button "clear err" [clear panout/text] 
           ]
-    do [curdir/text:  form get-current-dir setcurdirfiles  flist/data: current/curdirfiles ]
+    do [ panout/text: "" curdir/text:  form get-current-dir setcurdirfiles  flist/data: current/curdirfiles ]
 ]
 
 mainwin/menu: mainmenu
 
 mainwin/actors: context [
     on-menu: func [face [object!] event [event!]][
-        print ["enter ON-MENU event/picked:"  event/picked ]
         either event/picked = none
            [print " !!!!!!!!!!! ALERT NONE EVENT" ]
            [switch event/picked [
                'fnew   [clear codesrc/text ] 
                'fopen  [loadfile] 
                'fsave  [savefile] 
-               'setfont8  [codesrc/font/size: 8 ]
-               'setfont10 [codesrc/font/size: 10 ]
-               'setfont12 [codesrc/font/size: 12 ]
-               'setfont14 [codesrc/font/size: 14 ]
+               'setfont8  [codesrc/font/size: 8 panout/font/size: 8 ]
+               'setfont10 [codesrc/font/size: 10 panout/font/size: 10]
+               'setfont12 [codesrc/font/size: 12 panout/font/size: 12]
+               'setfont14 [codesrc/font/size: 14 panout/font/size: 14]
                'setfg-black [codesrc/font/color: black ]
                'setfg-white [codesrc/font/color: white ]
                'setfg-red [codesrc/font/color: red ]
@@ -241,14 +226,30 @@ mainwin/actors: context [
                'runsrc [dolocalrun]
                'runextsrc  [doextrun]
                'compilesrc [doextcompil  alertPOPUP "finished"]
-               'about [alertPOPUP "RED DEMO: SIMPLE EDITOR "]
-               'exit [quit]
+               'about [alertPOPUP "RED DEMO: SIMPLE EDITOR/IDE "]
+               'exit [unview]
              ]]
-         print ["leave ON-MENU"  event/picked]
          none
     ]
     on-resize:   func  [face [object!] event [event!]] [ calcresize ]
     on-key-down: func [face [object!] event [event!]]['done]
     ]
 
-view/flags mainwin [resize]
+printerr: function [xl] [
+    ; print out in panout
+    if xl [
+       case[  
+             string? xl [append panout/text  xl ] 
+             series? xl [foreach y xl   [printerr reduce y]]
+             true  [append panout/text mold  xl ]
+           ] 
+    ] 
+]
+printerrlf: function [x] [printerr x  append panout/text crlf]
+
+set 'prinorig :prin 
+set 'printorig :print 
+set 'print :printerrlf
+set 'prin :printerr
+
+view/no-wait/flags mainwin [resize]
