@@ -11,6 +11,7 @@ Red [
         Needs:   'view
 ]
 
+
 comment {
 **WARNING**Red is far to be finished and still lack a lot of things so this code is prematured and only for fun (main lack for RED GC IO better CALL )
  NEED TO BE COMPILED TO WORK with RUN external and compile 
@@ -21,7 +22,12 @@ comment {
 #include %../../red/system/library/call/call.red 
 
 ;-- system/view/debug?: yes
+aboutmsg: { Basic demo ide editor
+  writen in Red Lang 
+            Distributed under the Boost Software License, Version 1.0.
+            See https://github.com/red/red/blob/master/BSL-License.txt
 
+        } 
 alertPOPUP: function [
     "Displays an alert message"
     msg [string!]  "Message to display"
@@ -32,9 +38,19 @@ alertPOPUP: function [
         do [b/offset/x: t/offset/x + (t/size/x - b/size/x / 2)]
     ][modal popup]
 ]
+infoPOPUP: function [
+    "Displays an alert message"
+    msg [string!]  "Message to display"
+][
+    view [
+        t: area  msg center return
+        b: button "ok" [ unview]
+        do [b/offset/x: t/offset/x + (t/size/x - b/size/x / 2)]
+    ][modal popup]
+]
 
-;-- in prevision for future extension 
-current: context [
+
+-current-: context [
     bgcolor: black
     fgcolor: white
     red: "red.exe  "
@@ -45,9 +61,9 @@ current: context [
     cmd: ""
 ]
 
-if system/platform <> 'Windows [ current/red: "red  "  ]
+if system/platform <> 'Windows [ -current-/red: "red  "  ]
 
-mainmenu: [
+-mainmenu-: [
             "File" [
                     "New file"     fnew
                     "Load file"     fopen
@@ -109,147 +125,155 @@ dirfiles: function [
     reslist
 ]
 
-loadfile: does[ print ["LOADFILE " curfilename/text ]
+-loadfile-: does[ print ["-loadfile- " curfilename/text ]
                 fn: to file! curfilename/text
-                ;--if exists? fn [codesrc/text: replace/all read fn "^/" "^/"]
-                if exists? fn [codesrc/text:  read  fn]
-                current/modified: false
-                if codesrc/text = none [print "WARNING CODSRC/TEXT IS NONE"]
+                ;--if exists? fn [-codesrc-/text: replace/all read fn "^/" "^/"]
+                if exists? fn [-codesrc-/text:  read  fn]
+                -current-/modified: false
+                if -codesrc-/text = none [print "WARNING CODSRC/TEXT IS NONE"]
               ]
 
-savefile: does [write/binary (to file! curfilename/text) codesrc/text  current/modified: false]
+-savefile-: does [write/binary (to file! curfilename/text) -codesrc-/text  -current-/modified: false]
 
-setcurdirfiles: does [current/curdirfiles: dirfiles ]
+-setcurdirfiles-: does [-current-/curdirfiles: dirfiles ]
 
-execall: does [
+-execall-: function [waitexe?] [
     "call red as external program red.exe must be in path"
-    either current/modified [
-                              alertPOPUP "Please save file before" 
-                            ][ attempt [
-                                   pid: call/console current/cmd  
-                                   append codeerr/text (append  copy "^/START PID:" form pid)
-                                   ]
-                            ]
+    either -current-/modified 
+        [  alertPOPUP "Please save file before" 
+        ][ attempt [
+                either waitexe?
+                      [pid: call/wait/console -current-/cmd]
+                      [pid: call/console -current-/cmd]  
+               append codeerr/text (append  copy "^/START PID:" form pid)
+               ]
+        ]
 ]
 
-src: ""
-dolocalrun: does[ 
-                  either  codesrc/text <> none [
+-dolocalrun-: does[ 
+                  either  -codesrc-/text <> none [
                      print ["RUN " curfilename/text] 
-                     attempt [do codesrc/text]
+                     attempt [do -codesrc-/text]
                   ][
-                     print "CODESRC/TEXT is NONE please try to RELOAD FILE  " 
+                     print "-codesrc-/TEXT is NONE please try to RELOAD FILE  " 
                   ]
 ]
 
-doextrun: does [
-    clear current/cmd
-    append current/cmd current/red   ;--"red.exe  "
-    append current/cmd curfilename/text
-    codeerr/text:  current/cmd 
-    execall 
+-doextrun-: does [
+    clear -current-/cmd
+    append -current-/cmd -current-/red   ;--"red.exe  "
+    append -current-/cmd curfilename/text
+    codeerr/text:  -current-/cmd 
+    -execall- false
 ]
 
-doextcompil: does [
-    clear current/cmd
-    append current/cmd current/red   ;--"red.exe  "
-    append current/cmd " -c -t "
-    append current/cmd current/target
-    either modedebug/data [append current/cmd " -d "][append current/cmd " "]
-    append current/cmd curfilename/text
-    codeerr/text:  current/cmd
-    execall 
+-doextcompil-: does [
+    clear -current-/cmd
+    append -current-/cmd -current-/red   ;--"red.exe  "
+    append -current-/cmd " -c -t "
+    append -current-/cmd -current-/target
+    either modedebug/data [append -current-/cmd " -d "][append -current-/cmd " "]
+    append -current-/cmd curfilename/text
+    codeerr/text:  -current-/cmd
+    -execall- true
 ]
 
-calcresize: does [
-    newsize: mainwin/size - codesrc/offset
-    codesrc/size: newsize - 10x110
+-calcresize-: does [
+    newsize: -mainwin-/size - -codesrc-/offset
+    -codesrc-/size: newsize - 10x110
 ]
 
-comptype-bar: [
+-comptype-bar-: [
     group-box "Compile Target type"  [ 
     return
-    radio "windowsXP"  80x15 data true [current/target: "windowsXP"] return
-    radio "windows"    80x15  [current/target: "windows"] return
-    radio "Linux"      80x15  [current/target: "Linux"] return
-    radio "Linux-ARM"  80x15  [current/target: "Linux-ARM"] return
-    radio "RPi"        80x15  [current/target: "RPi"] return
-    radio "Darwin"     80x15  [current/target: "Darwin"] return
-    radio "Android"    80x15  [current/target: "Android"] return
+    radio "windowsXP"  80x15 data true [-current-/target: "windowsXP"] return
+    radio "windows"    80x15  [-current-/target: "windows"] return
+    radio "Linux"      80x15  [-current-/target: "Linux"] return
+    radio "Linux-ARM"  80x15  [-current-/target: "Linux-ARM"] return
+    radio "RPi"        80x15  [-current-/target: "RPi"] return
+    radio "Darwin"     80x15  [-current-/target: "Darwin"] return
+    radio "Android"    80x15  [-current-/target: "Android"] return
     modedebug: check "debug"    80x15    return
     ]
 ] 
 
-mainwin: layout compose/deep[
+-mainwin-: layout compose/deep[
     style: txtinfo:  text bold font-size 12 font-color blue
-    txtinfo "Current Dir.:"  curdir: txtinfo "" 300  return 
-    curfilename: field "defaulteditest.red" 200  return
-    panel [ below
-           flist: text-list on-change [curfilename/text: pick current/curdirfiles face/selected loadfile]
-           (comptype-bar)
-           ]
+    txtinfo "-current- Dir.:"  curdir: txtinfo "" 300  return 
+    curfilename: field "defaulteditest.red" 200  
+    button "Run" [-dolocalrun-] return
     below
+panel [
+    panel [ below
+           -flist-: text-list 120x250  on-change [curfilename/text: pick -current-/curdirfiles face/selected -loadfile-]
+           (-comptype-bar-)
+           ]
     panel [ 
-          codesrc: area 600x400 bold italic white font-color black font-size 14  on-change[ current/modified: true]
+          -codesrc-: area 700x420 bold italic white font-color black font-size 14  on-change[ -current-/modified: true]
           ]
+]
+panel[
+    button 120x120 "clear err" [clear -panout-/text] 
     panel [
-          panout: area 550x200 bold italic white font-color black font-size 14  
-          button "clear err" [clear panout/text] 
+           
+          -panout-: area 700x220 bold italic white font-color black font-size 14  
+          
           ]
-    do [ panout/text: "" curdir/text:  form get-current-dir setcurdirfiles  flist/data: current/curdirfiles ]
+]
+    do [ -panout-/text: "" curdir/text:  form get-current-dir -setcurdirfiles-  -flist-/data: -current-/curdirfiles ]
 ]
 
-mainwin/menu: mainmenu
+-mainwin-/menu: -mainmenu-
 
-mainwin/actors: context [
+-mainwin-/actors: context [
     on-menu: func [face [object!] event [event!]][
         either event/picked = none
            [print " !!!!!!!!!!! ALERT NONE EVENT" ]
            [switch event/picked [
-               'fnew   [clear codesrc/text ] 
-               'fopen  [loadfile] 
-               'fsave  [savefile] 
-               'setfont8  [codesrc/font/size: 8 panout/font/size: 8 ]
-               'setfont10 [codesrc/font/size: 10 panout/font/size: 10]
-               'setfont12 [codesrc/font/size: 12 panout/font/size: 12]
-               'setfont14 [codesrc/font/size: 14 panout/font/size: 14]
-               'setfg-black [codesrc/font/color: black ]
-               'setfg-white [codesrc/font/color: white ]
-               'setfg-red [codesrc/font/color: red ]
-               'setfg-blue [codesrc/font/color: blue ]
-               'setbg-black [codesrc/color: black ]
-               'setbg-white [codesrc/color: white ]
-               'setbg-cyan [codesrc/color: cyan ]
-               'setbg-forest [codesrc/color: forest ]
-               'setbg-olive [codesrc/color: olive ]
-               'setbg-water [codesrc/color: water ]
-               'runsrc [dolocalrun]
-               'runextsrc  [doextrun]
-               'compilesrc [doextcompil  alertPOPUP "finished"]
-               'about [alertPOPUP "RED DEMO: SIMPLE EDITOR/IDE "]
+               'fnew   [clear -codesrc-/text ] 
+               'fopen  [-loadfile-] 
+               'fsave  [-savefile-] 
+               'setfont8  [-codesrc-/font/size: 8 -panout-/font/size: 8 ]
+               'setfont10 [-codesrc-/font/size: 10 -panout-/font/size: 10]
+               'setfont12 [-codesrc-/font/size: 12 -panout-/font/size: 12]
+               'setfont14 [-codesrc-/font/size: 14 -panout-/font/size: 14]
+               'setfg-black [-codesrc-/font/color: black ]
+               'setfg-white [-codesrc-/font/color: white ]
+               'setfg-red [-codesrc-/font/color: red ]
+               'setfg-blue [-codesrc-/font/color: blue ]
+               'setbg-black [-codesrc-/color: black ]
+               'setbg-white [-codesrc-/color: white ]
+               'setbg-cyan [-codesrc-/color: cyan ]
+               'setbg-forest [-codesrc-/color: forest ]
+               'setbg-olive [-codesrc-/color: olive ]
+               'setbg-water [-codesrc-/color: water ]
+               'runsrc [-dolocalrun-]
+               'runextsrc  [-doextrun-]
+               'compilesrc [-doextcompil-  alertPOPUP "finished"]
+               'about [infoPOPUP aboutmsg]
                'exit [unview]
              ]]
          none
     ]
-    on-resize:   func  [face [object!] event [event!]] [ calcresize ]
+    on-resize:   func  [face [object!] event [event!]] [ -calcresize- ]
     on-key-down: func [face [object!] event [event!]]['done]
     ]
 
 printerr: function [xl] [
-    ; print out in panout
+    ; print out in -panout-
     if xl [
        case[  
-             string? xl [append panout/text  xl ] 
+             string? xl [append -panout-/text  xl ] 
              series? xl [foreach y xl   [printerr reduce y]]
-             true  [append panout/text mold  xl ]
+             true  [append -panout-/text mold  xl ]
            ] 
     ] 
 ]
-printerrlf: function [x] [printerr x  append panout/text crlf]
+printerrlf: function [x] [printerr x  append -panout-/text crlf]
 
 set 'prinorig :prin 
 set 'printorig :print 
 set 'print :printerrlf
 set 'prin :printerr
 
-view/no-wait/flags mainwin [resize]
+view/flags -mainwin- []
