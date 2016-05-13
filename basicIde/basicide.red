@@ -22,6 +22,7 @@ comment {
 
 ;-- system/view/debug?: yes
 
+
 alertPOPUP: function [
     "Displays an alert message"
     msg [string!]  "Message to display"
@@ -88,6 +89,19 @@ mainmenu: [
             "Help" [ "About"  about]
 ]
 
+comment{
+adderr: function [x] [
+    ; add detail in codeerr area
+    unless x = none [
+       case  [  
+                type? x  = string! [append codeerr/text x ] 
+                type? x  = list! [for each y x [adder y]] 
+                true  [append codeerr/text form x ]
+            ] 
+    ] 
+]
+}
+
 dirfiles: function [
     "select files and return list (poor copy from original file)"
     'dir [any-type!] "Folder to list"
@@ -106,10 +120,12 @@ dirfiles: function [
     reslist
 ]
 
-loadfile: does[ clear codesrc/text 
+loadfile: does[ print "entrée de LOADFILE"
+                clear codesrc/text 
                 fn: to file! curfilename/text
                 if  exists? fn [codesrc/text: load mold (read fn)]
                 current/modified: false
+                print "sortie de LOADFILE"
               ]
 savefile: does [write/binary (to file! curfilename/text) codesrc/text  current/modified: false]
 
@@ -126,7 +142,19 @@ execall: does [
                             ]
 ]
 
-dolocalrun: does[ attempt [do codesrc/text]]
+src: ""
+dolocalrun: does[ 
+                  either  codesrc/text <> none [
+                     print ["Enter DOLOCAL" curfilename/text] 
+                     clear src
+                     src: copy codesrc/text
+                     unless src = none [attempt [do src]]
+                     print "Sortie de DOLOCAL"
+                     wait 0.1
+                 ][
+                  print "CODESRC/TEXT is NONE trying to RELOAD FILE  "  loadfile
+                  ]
+]
 
 doextrun: does [
     clear current/cmd
@@ -189,33 +217,37 @@ mainwin/menu: mainmenu
 
 mainwin/actors: context [
     on-menu: func [face [object!] event [event!]][
-        switch event/picked [
-           'fnew   [clear codesrc/text ] 
-           'fopen  [loadfile] 
-           'fsave  [savefile] 
-           'setfont8  [codesrc/font/size: 8 ]
-           'setfont10 [codesrc/font/size: 10 ]
-           'setfont12 [codesrc/font/size: 12 ]
-           'setfont14 [codesrc/font/size: 14 ]
-           'setfg-black [codesrc/font/color: black ]
-           'setfg-white [codesrc/font/color: white ]
-           'setfg-red [codesrc/font/color: red ]
-           'setfg-blue [codesrc/font/color: blue ]
-           'setbg-black [codesrc/color: black ]
-           'setbg-white [codesrc/color: white ]
-           'setbg-cyan [codesrc/color: cyan ]
-           'setbg-forest [codesrc/color: forest ]
-           'setbg-olive [codesrc/color: olive ]
-           'setbg-water [codesrc/color: water ]
-           'runsrc [dolocalrun]
-           'runextsrc  [doextrun]
-           'compilesrc [doextcompil  alertPOPUP "finished"]
-           'about [alertPOPUP "RED DEMO: SIMPLE EDITOR "]
-           'exit [quit]
-         ]
+        print ["enter ON-MENU event/picked:"  event/picked ]
+        either event/picked = none
+           [print " !!!!!!!!!!! ALERT NONE EVENT" ]
+           [switch event/picked [
+               'fnew   [clear codesrc/text ] 
+               'fopen  [loadfile] 
+               'fsave  [savefile] 
+               'setfont8  [codesrc/font/size: 8 ]
+               'setfont10 [codesrc/font/size: 10 ]
+               'setfont12 [codesrc/font/size: 12 ]
+               'setfont14 [codesrc/font/size: 14 ]
+               'setfg-black [codesrc/font/color: black ]
+               'setfg-white [codesrc/font/color: white ]
+               'setfg-red [codesrc/font/color: red ]
+               'setfg-blue [codesrc/font/color: blue ]
+               'setbg-black [codesrc/color: black ]
+               'setbg-white [codesrc/color: white ]
+               'setbg-cyan [codesrc/color: cyan ]
+               'setbg-forest [codesrc/color: forest ]
+               'setbg-olive [codesrc/color: olive ]
+               'setbg-water [codesrc/color: water ]
+               'runsrc [dolocalrun]
+               'runextsrc  [doextrun]
+               'compilesrc [doextcompil  alertPOPUP "finished"]
+               'about [alertPOPUP "RED DEMO: SIMPLE EDITOR "]
+               'exit [quit]
+             ]]
+         print ["leave ON-MENU"  event/picked]
+         none
     ]
     on-resize:   func  [face [object!] event [event!]] [ calcresize ]
-    ;;;on-close:    func  [face [object!] event [event!]] [quit]
     on-key-down: func [face [object!] event [event!]]['done]
     ]
 
