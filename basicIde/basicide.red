@@ -30,7 +30,6 @@ Red is far to be finished and still lack a lot of things so this code is prematu
 
 ; !!!!!!!  TO COMPILE UNCOMMENT THIS BLOCK    
 ;-- and adapt include below to your path
-
 comment {
 
 #include %../../red/system/library/call/call.red  
@@ -39,7 +38,7 @@ comment {
 ;--- INSERT EXEMPLE text area scroll CODE FROM @DOCKIMBEL 
 ;-- only for windows and need to be compiled 
 ;-- comment this code area to use in pure interpretor
-;-- -----------------------------------------------------
+;-- -----------------------------------------------------#system [
 #system [
     #import [
         "User32.dll" stdcall [
@@ -78,14 +77,18 @@ scroll-bottom: routine [
         hWnd    [handle!]
         pos-min [integer!]
         pos-max [integer!]
+        resl [logic!]
+        resi [integer!]
 ][
     hWnd: gui/face-handle? face
     pos-min: 0
-    pos-max: 0
-    GetScrollRange hWnd 1 :pos-min :pos-max
-    SetScrollPos gui/face-handle? face 1 pos-max yes
-    gui/SendMessage hWnd 00B6h 0 99999                      ;-- EM_LINESCROLL
-    gui/SendMessage hWnd 00B7h 0 0                          ;-- EM_SCROLLCARET
+    pos-max: 99999
+    resl: GetScrollRange hWnd 1 :pos-min :pos-max 
+    resi: SetScrollPos hWnd 1 pos-max yes
+    ;print " RES RANGE " print resl print " MAX " print pos-max
+    ;print " RES POS " print resi print lf
+    gui/SendMessage hWnd 00B7h 0 pos-max                  ;-- EM_SCROLLCARET
+    gui/SendMessage hWnd 00B6h 0 pos-max             ;-- EM_LINESCROLL
 ]
 
 ;-- -----------------------------------------------------
@@ -93,21 +96,7 @@ scroll-bottom: routine [
 }
 
 ;-- -----------------------------------------------------
-;-- redefine print is big hack 
- 
-printerr: function [xl] [
-    ; print out in -panout-
-    ; printorig ["printerr for x: xl" xl]
-    if xl [
-        case[  
-             string? xl [append -panout-/text  form xl ] 
-             series? xl [foreach y xl   [printerr mold compose y]]
-             true  [ append -panout-/text  form mold xl  ]
-        ] 
-    ]
-]
 
-printerrlf: function [x] [printerr x  append -panout-/text crlf]
 
 aboutmsg: { Basic demo ide editor
   writen in Red Lang (http://www.red-lang.org/) 
@@ -272,7 +261,7 @@ getallwords: does [
     -curfilename-: field "defaulteditest.red" 200  
     button "Run" [-dolocalrun-] 
     txtinfo "  help:" 
-    allw: text-list  60x10 [-help- face] return
+    allw: text-list  80x20 [-help- face] return
     below
     space 2x2
     panel [
@@ -287,12 +276,20 @@ getallwords: does [
     panel [
         panel 130x200 [
             button 120x120 "clear err" [clear -panout-/text] 
+            return
+            button 120x30 "go bottom"  [scroll-bottom -panout-]
         ]
         -panres-: panel 710x210 [
-              -panout-: area 700x200 bold italic white font-color black font-size 14 on-change[ scroll-bottom face] 
+              -panout-: area 700x200 bold italic white font-color black font-size 14 on-change[scroll-bottom face]   
               ]
     ]
-    do [  -panout-/text: "" curdir/text:  form get-current-dir -setcurdirfiles-  -flist-/data: -current-/curdirfiles  getallwords allw/data: allstrwords ]
+    do [  -panout-/text: "" 
+          curdir/text:  form get-current-dir 
+          -setcurdirfiles- 
+           -flist-/data: -current-/curdirfiles  getallwords 
+           allw/data: allstrwords 
+           -panout-/enable? false
+        ]
 ]
 
 -mainwin-/menu: [
@@ -366,7 +363,7 @@ getallwords: does [
     ]
     on-resize:   func  [face [object!] event [event!]] [ -calcresize- ]
     on-key-down: func [face [object!] event [event!]]['done]
-    ]
+]
 
 -minwinsize-: 900x820
 -calcresize-: does [
@@ -394,8 +391,23 @@ getallwords: does [
           printerrlf ["  -panout-   " -panout-/size ]
 ]
 
+;-- redefine print is big hack 
+printerr: function [xl] [
+    ; print out in -panout-
+    ; printorig ["printerr for x: xl" xl]
+    if xl [
+        case[  
+             string? xl [append -panout-/text  form xl ] 
+             series? xl [foreach y xl   [printerr form mold compose y]]
+             true  [ append -panout-/text  form mold xl ]
+        ]
+    ]
+]
 
-
+printerrlf: function [x] [
+                     printerr x  
+                     append -panout-/text crlf 
+                     ]
 ;-- some problem to redefine print with compiler 
 ;-- must be last to get compiled ... so in this code must use printerrlf 
 init: does [
