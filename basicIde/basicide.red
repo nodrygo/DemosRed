@@ -31,6 +31,7 @@ Red is far to be finished and still lack a lot of things so this code is prematu
 ; !!!!!!!  TO COMPILE UNCOMMENT THIS BLOCK    
 ;-- and adapt include below to your path
 
+comment {
 
 #include %../../red/system/library/call/call.red  
 
@@ -82,14 +83,14 @@ scroll-bottom: routine [
     pos-min: 0
     pos-max: 0
     GetScrollRange hWnd 1 :pos-min :pos-max
-    SetScrollPos gui/face-handle? face  pos-max yes
+    SetScrollPos gui/face-handle? face 1 pos-max yes
     gui/SendMessage hWnd 00B6h 0 99999                      ;-- EM_LINESCROLL
     gui/SendMessage hWnd 00B7h 0 0                          ;-- EM_SCROLLCARET
 ]
 
 ;-- -----------------------------------------------------
 
-
+}
 
 ;-- -----------------------------------------------------
 ;-- redefine print is big hack 
