@@ -97,7 +97,6 @@ scroll-bottom: routine [
 
 ;-- -----------------------------------------------------
 
-
 aboutmsg: { Basic demo ide editor
   writen in Red Lang (http://www.red-lang.org/) 
             Distributed under the Boost Software License, Version 1.0.
@@ -126,6 +125,36 @@ infoPOPUP: function [
     ][modal popup]
 ]
 
+paramsPOPUP: function [
+    "Displays parameters"
+][
+    view [
+    group-box "Compile Target"  [ 
+    return
+    radio "windowsXP"  80x15 data true [-current-/target: "windowsXP"] return
+    radio "windows"    80x15  [-current-/target: "windows"] return
+    radio "Linux"      80x15  [-current-/target: "Linux"] return
+    radio "Linux-ARM"  80x15  [-current-/target: "Linux-ARM"] return
+    radio "RPi"        80x15  [-current-/target: "RPi"] return
+    radio "Darwin"     80x15  [-current-/target: "Darwin"] return
+    radio "Android"    80x15  [-current-/target: "Android"] return
+    check "debug"  80x15      [-current-/debug: face/data]    return
+    ]
+    button "ok" [ unview]
+    ][modal popup]
+]
+
+;;; NEED to redeclare lite help to work with my limited print 
+-litehelp-: func[w][
+            spec: spec-of get w 
+            either any [
+                string? desc: spec/1 
+                string? desc: spec/2
+            ] [
+                printerrlf [desc]
+            ] [printerrlf "no doc avalaible" ]
+]
+
 ;;; NEED to redeclare lite help to work with my limited print 
 -litehelp-: func[w][
             spec: spec-of get w 
@@ -138,11 +167,13 @@ infoPOPUP: function [
 ]
 
 -current-: context [
+    minwinsize: 900x800
     red: "red.exe  "
     redboot:  system/options/boot
     curdirfiles: []
     modified: false
     target: "Windows"
+    debug: false
     cmd: ""
 ]
 
@@ -215,7 +246,7 @@ dirfiles: function [
           append -current-/cmd -current-/red   ;--"red.exe  "
           append -current-/cmd " -c -t "
           append -current-/cmd -current-/target
-          either modedebug/data [append -current-/cmd " -d "][append -current-/cmd " "]
+          either -current-/debug [append -current-/cmd " -d "][append -current-/cmd " "]
           append -current-/cmd -curfilename-/text
           -execall- true
           printerrlf "Compilation finished see .exe in your directory"
@@ -224,19 +255,6 @@ dirfiles: function [
         ]
 ]
 
--comptype-bar-: [
-    group-box "Compile Target"  [ 
-    return
-    radio "windowsXP"  80x15 data true [-current-/target: "windowsXP"] return
-    radio "windows"    80x15  [-current-/target: "windows"] return
-    radio "Linux"      80x15  [-current-/target: "Linux"] return
-    radio "Linux-ARM"  80x15  [-current-/target: "Linux-ARM"] return
-    radio "RPi"        80x15  [-current-/target: "RPi"] return
-    radio "Darwin"     80x15  [-current-/target: "Darwin"] return
-    radio "Android"    80x15  [-current-/target: "Android"] return
-    modedebug: check "debug"    80x15    return
-    ]
-] 
 
 allwords: copy []
 allstrwords: copy []
@@ -253,35 +271,49 @@ getallwords: does [
 -help-: function[f] [
     printerrlf ["   HELP FOR : " ( pick allstrwords f/selected)]
     -litehelp- (pick allwords f/selected)
+] 
+-tools-bar-: [
+    -tb-: panel 900x20  blue  [ across origin 1x1 space 1x1 
+        toolbutton "Load" [-loadfile-]
+        toolbutton "Save" [-savefile-]
+        toolbutton ""  disabled
+        toolbutton "Run" [-dolocalrun-]
+        toolbutton "Run External" [-doextrun-]
+        toolbutton "Compile Ext" [-doextrun-]
+        toolbutton "" disabled
+        toolbutton "Parameters" [paramsPOPUP]
+        toolbutton "" disabled
+        toolbutton "" disabled
+        toolbutton "" disabled
+        toolbutton "" disabled
+        toolbutton "About" [infoPOPUP aboutmsg]
+    ]return
 ]
-
+ 
 -mainwin-: layout compose/deep[
+    style: toolbutton: button 66x18
+    (-tools-bar-)
     style: txtinfo:  text bold font-size 12 font-color blue
     txtinfo "-current- Dir.:"  curdir: txtinfo "" 300  return 
     -curfilename-: field "defaulteditest.red" 200  
     button "Run" [-dolocalrun-] 
     txtinfo "  help:" 
-    allw: text-list  80x20 [-help- face] return
-    below
-    space 2x2
-    panel [
-        panel 130x450 [ below space 2x2
-               -flist-: text-list 120x180  on-change [-curfilename-/text: pick -current-/curdirfiles face/selected -loadfile-]
-               (-comptype-bar-)
-               ]
-        -pansrc-: panel 710x460 [
-              -codesrc-: area 700x440 bold italic white font-color black font-size 14  on-change[ -current-/modified: true]
-              ]
-    ]
-    panel [
-        panel 130x200 [
-            button 120x120 "clear err" [clear -panout-/text] 
-            return
-            button 120x30 "go bottom"  [scroll-bottom -panout-]
+    allw: drop-list  80x20 [-help- face] return
+    workpanel: panel blue [ below 
+        topp: panel black 900x440 [ origin 0x0 
+            subtopp: panel blue  [ below 
+                   -flist-: text-list 120x250  on-change [-curfilename-/text: pick -current-/curdirfiles face/selected -loadfile-]
+                   ]
+                  -codesrc-: area  bold italic cyan font-color black font-size 14  on-change[ -current-/modified: true]
+            ]
+        bottompp: panel black 900x200 [ origin 0x0
+            subbottompp: panel blue [
+                button 120x120 "clear err" [clear -panout-/text] 
+                return
+                button 120x30 "go bottom"  [scroll-bottom -panout-]
+            ]
+            -panout-: area  bold italic white font-color black font-size 14 on-change[scroll-bottom face]
         ]
-        -panres-: panel 710x210 [
-              -panout-: area 700x200 bold italic white font-color black font-size 14 on-change[scroll-bottom face]   
-              ]
     ]
     do [  -panout-/text: "" 
           curdir/text:  form get-current-dir 
@@ -291,6 +323,7 @@ getallwords: does [
            -panout-/enable? false
         ]
 ]
+
 
 -mainwin-/menu: [
     "File" [
@@ -365,30 +398,42 @@ getallwords: does [
     on-key-down: func [face [object!] event [event!]]['done]
 ]
 
--minwinsize-: 900x820
+
 -calcresize-: does [
-    deltasize: -mainwin-/size  -  -minwinsize-
-    either -mainwin-/size < -minwinsize- 
-        [
-         -mainwin-/size: -minwinsize-
-         -pansrc-/size:  710x460
-         -panres-/size:  710x210
-         -codesrc-/size: 700x450
-         -panout-/size:  700x200
-         ]
-        [
-         -pansrc-/size:  710x460 + deltasize 
-         -panres-/size:  710x210 + deltasize 
-         -codesrc-/size: 700x450 + deltasize
-         -panout-/size:  700x200 + deltasize
-          ]
-          printerrlf ["*************************"]
-          printerrlf ["WITH DELTA " deltasize]
-          printerrlf ["  -mainwin-  " -mainwin-/size] 
-          printerrlf ["  -pansrc-   " -pansrc-/size ]
-          printerrlf ["  -panres-   " -panres-/size ]
-          printerrlf ["  -codesrc-  " -codesrc-/size ]
-          printerrlf ["  -panout-   " -panout-/size ]
+    if -mainwin-/size/y < -current-/minwinsize/y 
+    [ -mainwin-/size/y: -current-/minwinsize/y
+    ]
+    if -mainwin-/size/x < -current-/minwinsize/x 
+    [ -mainwin-/size/x: -current-/minwinsize/x
+    ]
+    -tb-/size/x: -mainwin-/size/x - 20
+
+    workpanel/offset/x: 0
+    workpanel/size/y: to integer!  -mainwin-/size/y - 100
+    workpanel/size/x: -mainwin-/size/x 
+
+    topy:    to integer!  workpanel/size/y * 60% 
+    panx:    workpanel/size/x -  20
+
+    topp/size/x:      panx 
+    topp/size/y:      topy - 20 
+    subtopp/size/x: 160 
+    subtopp/size/y: topy - 20 
+
+    bottompp/offset/y:  topy 
+    bottompp/size/x:    panx 
+    subbottompp/size/x: 160
+    subbottompp/size/y:    workpanel/size/y -  topp/size/y - 40 
+    bottompp/size/y:       workpanel/size/y -  topp/size/y - 40 
+
+    -codesrc-/size/x: topp/size/x - 160
+    -codesrc-/size/y: topp/size/y - 10 
+
+    -panout-/size/x:  bottompp/size/x - 160
+    -panout-/size/y:   bottompp/size/y - 10 
+
+     prinorig ["*************************"]
+     prinorig ["  -mainwin-  " -mainwin-/size] 
 ]
 
 ;-- redefine print is big hack 
@@ -410,6 +455,8 @@ printerrlf: function [x] [
                      ]
 ;-- some problem to redefine print with compiler 
 ;-- must be last to get compiled ... so in this code must use printerrlf 
+
+
 init: does [
     set 'prinorig :prin 
     set 'printorig :print 
@@ -418,5 +465,8 @@ init: does [
 ]
 init
 
-view/flags -mainwin- [resize]
+-mainwin-/size: -current-/minwinsize
+-calcresize-
+;view/flags -mainwin- [resize]
+view/no-wait/flags -mainwin- [resize]
 
