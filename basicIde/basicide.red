@@ -11,6 +11,25 @@ Red [
         Needs:   'view
 ]
 
+;-- redefine print is big hack 
+printerr: function [xl] [
+    ; print out in -panout-
+    ; printorig ["printerr for x: xl" xl]
+    if xl [
+        case[  
+             string? xl [append -panout-/text  form xl ] 
+             series? xl [nxl: compose xl foreach y nxl [either string? y [printerr y][ printerr mold reduce y ]]]
+             true  [ append -panout-/text  form mold xl ]
+        ]
+    ]
+]
+
+printerrlf: function [x] [
+                     printerr x  
+                     append -panout-/text crlf 
+                     ]
+;-- some problem to redefine print with compiler 
+;-- must be last to get compiled ... so in this code must use printerrlf 
 
 comment {
 **WARNING** 
@@ -30,9 +49,9 @@ Red is far to be finished and still lack a lot of things so this code is prematu
 
 ; !!!!!!!  TO COMPILE UNCOMMENT THIS BLOCK    
 ;-- and adapt include below to your path
-comment {
 
-#include %../../red/system/library/call/call.red  
+comment{
+#include %../../redgit/red/system/library/call/call.red  
 
 ;-- -----------------------------------------------------
 ;--- INSERT EXEMPLE text area scroll CODE FROM @DOCKIMBEL 
@@ -92,8 +111,8 @@ scroll-bottom: routine [
 ]
 
 ;-- -----------------------------------------------------
-
 }
+
 
 ;-- -----------------------------------------------------
 
@@ -222,7 +241,7 @@ dirfiles: function [
 
 -dolocalrun-: does[
     either  -codesrc-/text <> none [
-                printerrlf ["Run file -->  " -curfilename-/text] 
+                printerrlf ["Run buffer -->  " -curfilename-/text] 
                 attempt [do -codesrc-/text]
             ][
                 printerrlf "WARNING not a red or reds file "
@@ -370,7 +389,7 @@ getallwords: does [
         either event/picked = none
            [printerrlf " !!!!!!!!!!! ALERT NONE EVENT" ]
            [switch event/picked [
-               'fnew   [clear -codesrc-/text ] 
+               'fnew   [-flist-/selected: none  -curfilename-/text: "new.red" clear -codesrc-/text ] 
                'fopen  [-loadfile-] 
                'fsave  [-savefile-] 
                'setfont8  [-codesrc-/font/size: 8 -panout-/font/size: 8 ]
@@ -432,30 +451,9 @@ getallwords: does [
     -panout-/size/x:  bottompp/size/x - 160
     -panout-/size/y:   bottompp/size/y - 10 
 
-     prinorig ["*************************"]
-     prinorig ["  -mainwin-  " -mainwin-/size] 
+     print "*************************"
+     print ["  -mainwin-  " -mainwin-/size] 
 ]
-
-;-- redefine print is big hack 
-printerr: function [xl] [
-    ; print out in -panout-
-    ; printorig ["printerr for x: xl" xl]
-    if xl [
-        case[  
-             string? xl [append -panout-/text  form xl ] 
-             series? xl [foreach y xl   [printerr form mold compose y]]
-             true  [ append -panout-/text  form mold xl ]
-        ]
-    ]
-]
-
-printerrlf: function [x] [
-                     printerr x  
-                     append -panout-/text crlf 
-                     ]
-;-- some problem to redefine print with compiler 
-;-- must be last to get compiled ... so in this code must use printerrlf 
-
 
 init: does [
     set 'prinorig :prin 
@@ -464,7 +462,7 @@ init: does [
     set 'prin :printerr
 ]
 init
-
+ 
 -mainwin-/size: -current-/minwinsize
 -calcresize-
 ;view/flags -mainwin- [resize]
