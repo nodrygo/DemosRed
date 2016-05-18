@@ -18,7 +18,7 @@ printerr: function [xl] [
     if xl [
         case[  
              string? xl [append -panout-/text  form xl ] 
-             series? xl [nxl: compose xl foreach y nxl [either string? y [printerr y][ printerr mold reduce y ]]]
+             series? xl [nxl: compose xl foreach y nxl [either string? y [printerr y][ printerr  reduce y ]]]
              true  [ append -panout-/text  form mold xl ]
         ]
     ]
@@ -239,13 +239,25 @@ dirfiles: function [
 
 -check-is-red-: function[fn][parse fn [thru ["reds" | "red"] ] ]
 
--dolocalrun-: does[
+; borrow and adapt  try-do from  Red console
+try-dodo: func [code /local res  strout ][
+    set/any 'res  try [
+        catch/name [set/any 'res  do code] 'strout
+        ]
+     attempt[
+            either string? res [print  "*******  RUNNING DONE  ****"]
+                               [print [" !!! ERROR !!! " :res/id " WHERE:"  :res/where " " :res/arg1 " " :res/arg2 :res/arg3 ]]
+           ]
+]
+
+-dolocalrun-: function[][
     either  -codesrc-/text <> none [
-                printerrlf ["Run buffer -->  " -curfilename-/text] 
-                attempt [do -codesrc-/text]
+                printerrlf "*******   RUNNING BUFFER  ****"
+                ;;;;attempt [try-do  -codesrc-/text ]
+                try-dodo  -codesrc-/text
             ][
                 printerrlf "WARNING not a red or reds file "
-           ]
+            ]
 ]
 
 -doextrun-: does [
@@ -287,9 +299,12 @@ getallwords: does [
         ]
 ]
 
--help-: function[f] [
-    printerrlf ["   HELP FOR : " ( pick allstrwords f/selected)]
-    -litehelp- (pick allwords f/selected)
+lastsel: 0 
+-help-: function[sel] [
+    w: pick allstrwords sel
+    print [" selected "  w]
+    printerrlf ["   HELP FOR : " ( pick allstrwords sel)]
+    -litehelp- (pick allwords sel)
 ] 
 -tools-bar-: [
     -tb-: panel 900x20  blue  [ across origin 1x1 space 1x1 
@@ -317,7 +332,7 @@ getallwords: does [
     -curfilename-: field "defaulteditest.red" 200  
     button "Run" [-dolocalrun-] 
     txtinfo "  help:" 
-    allw: drop-list  80x20 [-help- face] return
+    allw: Drop-down  80x20  on-change [-help- face/selected]   return
     workpanel: panel blue [ below 
         topp: panel black 900x440 [ origin 0x0 
             subtopp: panel blue  [ below 
