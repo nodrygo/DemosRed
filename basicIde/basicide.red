@@ -50,7 +50,7 @@ Red is far to be finished and still lack a lot of things so this code is prematu
 ; !!!!!!!  TO COMPILE UNCOMMENT THIS BLOCK    
 ;-- and adapt include below to your path
 
-comment{
+comment {
 #include %../../redgit/red/system/library/call/call.red  
 
 ;-- -----------------------------------------------------
@@ -245,18 +245,22 @@ try-dodo: func [code /local res  strout ][
         catch/name [set/any 'res  do code] 'strout
         ]
      attempt[
-            either string? res [print  "*******  RUNNING DONE  ****"]
-                               [print [" !!! ERROR !!! " :res/id " WHERE:"  :res/where " " :res/arg1 " " :res/arg2 :res/arg3 ]]
+            ; if return is  error! object print error else print ok running
+            oer: parse mold res [thru "make error!" thru end]
+            either oer
+                    [printerrlf [" !!! ERROR !!! " :res/id " WHERE: "  :res/where "  " :res/arg1 " " :res/arg2 :res/arg3 ]]
+                    [printerrlf  "*******  RUNNING DONE  ****"]
+
            ]
 ]
 
+; TODO   PARSE code to transform all word:  as local ???
 -dolocalrun-: function[][
     either  -codesrc-/text <> none [
                 printerrlf "*******   RUNNING BUFFER  ****"
-                ;;;;attempt [try-do  -codesrc-/text ]
                 try-dodo  -codesrc-/text
             ][
-                printerrlf "WARNING not a red or reds file "
+                printerrlf "WARNING not a Red or Reds file "
             ]
 ]
 
@@ -302,7 +306,6 @@ getallwords: does [
 lastsel: 0 
 -help-: function[sel] [
     w: pick allstrwords sel
-    print [" selected "  w]
     printerrlf ["   HELP FOR : " ( pick allstrwords sel)]
     -litehelp- (pick allwords sel)
 ] 
@@ -313,7 +316,7 @@ lastsel: 0
         toolbutton ""  disabled
         toolbutton "Run" [-dolocalrun-]
         toolbutton "Run External" [-doextrun-]
-        toolbutton "Compile Ext" [-doextrun-]
+        toolbutton "Compile Ext" [-doextcompil-]
         toolbutton "" disabled
         toolbutton "Parameters" [paramsPOPUP]
         toolbutton "" disabled
@@ -338,7 +341,7 @@ lastsel: 0
             subtopp: panel blue  [ below 
                    -flist-: text-list 120x250  on-change [-curfilename-/text: pick -current-/curdirfiles face/selected -loadfile-]
                    ]
-                  -codesrc-: area  bold italic cyan font-color black font-size 14  on-change[ -current-/modified: true]
+                  -codesrc-: area  bold cyan font-color black font-size 14  on-change[ -current-/modified: true]
             ]
         bottompp: panel black 900x200 [ origin 0x0
             subbottompp: panel blue [
@@ -446,7 +449,7 @@ lastsel: 0
     workpanel/size/y: to integer!  -mainwin-/size/y - 100
     workpanel/size/x: -mainwin-/size/x 
 
-    topy:    to integer!  workpanel/size/y * 60% 
+    topy:    to integer!  workpanel/size/y * 60%
     panx:    workpanel/size/x -  20
 
     topp/size/x:      panx 
@@ -466,8 +469,8 @@ lastsel: 0
     -panout-/size/x:  bottompp/size/x - 160
     -panout-/size/y:   bottompp/size/y - 10 
 
-     print "*************************"
-     print ["  -mainwin-  " -mainwin-/size] 
+     ;-- print "*************************"
+     ;-- print ["  -mainwin-  " -mainwin-/size] 
 ]
 
 init: does [
