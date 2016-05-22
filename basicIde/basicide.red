@@ -32,6 +32,12 @@ printerrlf: function [x] [
 ;-- must be last to get compiled ... so in this code must use printerrlf 
 
 comment {
+    ** TODO **
+externalise dialogs
+add parameters tabs:  compil dll/exe/verbose  font/size/color 
+save default params in file 
+wait for richtext and add color syntax/completion
+
 **WARNING** 
 Red is far to be finished and still lack a lot of things so this code is prematured and only for fun (main lack for RED are  GC, IO, better CALL, isolated threads )
 
@@ -148,17 +154,75 @@ paramsPOPUP: function [
     "Displays parameters"
 ][
     view [
-    group-box "Compile Target"  [ 
-    return
-    radio "windowsXP"  80x15 data true [-current-/target: "windowsXP"] return
-    radio "windows"    80x15  [-current-/target: "windows"] return
-    radio "Linux"      80x15  [-current-/target: "Linux"] return
-    radio "Linux-ARM"  80x15  [-current-/target: "Linux-ARM"] return
-    radio "RPi"        80x15  [-current-/target: "RPi"] return
-    radio "Darwin"     80x15  [-current-/target: "Darwin"] return
-    radio "Android"    80x15  [-current-/target: "Android"] return
-    check "debug"  80x15      [-current-/debug: face/data]    return
+    style: tradio: radio 120x20
+    Tab-panel [ 
+        "Compiler" [ across
+           panel[
+              group-box "Compile Target"  [ 
+                return
+                tradio "windowsXP"  data true [-current-/target: "windowsXP"] return
+                tradio "windows"    [-current-/target: "windows"] return
+                tradio "Linux"      [-current-/target: "Linux"] return
+                tradio "Linux-ARM"  [-current-/target: "Linux-ARM"] return
+                tradio "RPi"        [-current-/target: "RPi"] return
+                tradio "Darwin"     [-current-/target: "Darwin"] return
+                tradio "Android"    [-current-/target: "Android"] 
+                ]
+            ]
+           panel[
+              group-box "Mode Compile"  [ 
+                return
+                tradio "Exe"   data true [-current-/outmode: "exe"] return
+                tradio "Dll"  [-current-/outmode: "dll"] 
+                ]return
+              check "debug"   [-current-/debug: face/data] return
+              check "no runtime"  [-current-/noruntime: face/data] 
+           ]   
+        ]
+        "Presentation" [ across
+          panel[
+            group-box "Edit"  [return
+                tradio "Font 8"   [-codesrc-/font/size: 8] return
+                tradio "Font 10"  data true [-codesrc-/font/size: 10] return
+                tradio "Font 12"  [-codesrc-/font/size: 12] return
+                tradio "Font 14"  [-codesrc-/font/size: 14] return
+                ]return
+            group-box "Text color "  [return
+                tradio " black"  data true [-codesrc-/font/color: black ] return
+                tradio " white"   [-codesrc-/font/color: white ] return
+                tradio " red"   [-codesrc-/font/color: red ] return
+                tradio " blue"   [-codesrc-/font/color: blue ] return
+                ]return
+            group-box "Background color "  [return
+                tradio "white"   [-codesrc-/color: white ] return
+                tradio "black"   [-codesrc-/color: black ] return
+                tradio "cyan"   data true  [-codesrc-/color: cyan ] return
+                tradio "water"   [-codesrc-/color: water ]
+                ] 
+           ]
+          panel[
+                group-box "Output"  [return
+                tradio "8"   [-panout-/font/size: 8] return
+                tradio "10"   data true [-panout-/font/size: 10] return
+                tradio "12"    [-panout-/font/size: 12] return
+                tradio "14"    [-panout-/font/size: 14] return
+            group-box "Background  color "  [return
+                tradio "black"  data true [-panout-/font/color: black ] return
+                tradio "white"   [-panout-/font/color: white ] return
+                tradio "red"   [-panout-/font/color: red ] return
+                tradio "blue"   [-panout-/font/color: blue ] return
+                ]return
+            group-box "Text color "  [return
+                tradio "white"  data true [-panout-/color: white ] return
+                tradio "black"    [-panout-/color: black ] return
+                tradio "cyan"     [-panout-/color: cyan ] return
+                tradio "water"    [-panout-/color: water ]
+                ]
+            ]
+          ]
+        ]
     ]
+    return
     button "ok" [ unview]
     ][modal popup]
 ]
@@ -194,6 +258,9 @@ paramsPOPUP: function [
     target: "Windows"
     debug: false
     cmd: ""
+    editfont: "8"
+    outmode: "exe" 
+    noruntime: false
 ]
 
 if system/platform <> 'Windows [ -current-/red: "red  "  ]
@@ -282,6 +349,8 @@ try-dodo: func [code /local res  strout ][
           append -current-/cmd " -c -t "
           append -current-/cmd -current-/target
           either -current-/debug [append -current-/cmd " -d "][append -current-/cmd " "]
+          either --current-/outmode = "dll" [append -current-/cmd " -dlib "][append -current-/cmd " "]
+          either -current-/noruntime = true [append -current-/cmd " -r "][append -current-/cmd " "]
           append -current-/cmd -curfilename-/text
           -execall- true
           printerrlf "Compilation finished see .exe in your directory"
@@ -341,7 +410,7 @@ lastsel: 0
             subtopp: panel blue  [ below 
                    -flist-: text-list 120x250  on-change [-curfilename-/text: pick -current-/curdirfiles face/selected -loadfile-]
                    ]
-                  -codesrc-: area  bold cyan font-color black font-size 14  on-change[ -current-/modified: true]
+                  -codesrc-: area  bold cyan font-color black font-size 10  on-change[ -current-/modified: true]
             ]
         bottompp: panel black 900x200 [ origin 0x0
             subbottompp: panel blue [
@@ -349,7 +418,7 @@ lastsel: 0
                 return
                 button 120x30 "go bottom"  [scroll-bottom -panout-]
             ]
-            -panout-: area  bold italic white font-color black font-size 14 on-change[scroll-bottom face]
+            -panout-: area  bold italic white font-color black font-size 10 on-change[scroll-bottom face]
         ]
     ]
     do [  -panout-/text: "" 
@@ -370,35 +439,12 @@ lastsel: 0
             "-------"
             "Exit"        exit
            ]
-    "Font" [
-            "Size"     
-                 [
-                 "8" setfont8
-                 "10" setfont10
-                 "12" setfont12
-                 "14" setfont14
-                 ]
-            "FgColor"     
-                 [
-                 "Black" setfg-black
-                 "White" setfg-white
-                 "Blue" setfg-blue
-                 "Red" setfg-red
-                 ]                         
-            "BgColor"     
-                 [
-                 "Black" setbg-black
-                 "White" setbg-white
-                 "Water" setbg-water
-                 "Cyan" setbg-cyan
-                 "Olive" setbg-olive
-                 ]
-           ]
     "Tool" [ 
              "Run"  runsrc
              "Run external"  runextsrc
              "Compile" compilesrc
            ]
+    "Parameters"  callparams
     "Help" [ "About"  about]
 ]
 
@@ -410,19 +456,7 @@ lastsel: 0
                'fnew   [-flist-/selected: none  -curfilename-/text: "new.red" clear -codesrc-/text ] 
                'fopen  [-loadfile-] 
                'fsave  [-savefile-] 
-               'setfont8  [-codesrc-/font/size: 8 -panout-/font/size: 8 ]
-               'setfont10 [-codesrc-/font/size: 10 -panout-/font/size: 10]
-               'setfont12 [-codesrc-/font/size: 12 -panout-/font/size: 12]
-               'setfont14 [-codesrc-/font/size: 14 -panout-/font/size: 14]
-               'setfg-black [-codesrc-/font/color: black ]
-               'setfg-white [-codesrc-/font/color: white ]
-               'setfg-red [-codesrc-/font/color: red ]
-               'setfg-blue [-codesrc-/font/color: blue ]
-               'setbg-black [-codesrc-/color: black ]
-               'setbg-white [-codesrc-/color: white ]
-               'setbg-cyan [-codesrc-/color: cyan ]
-               'setbg-olive [-codesrc-/color: olive ]
-               'setbg-water [-codesrc-/color: water ]
+               'callparams [paramsPOPUP]
                'runsrc [-dolocalrun-]
                'runextsrc  [-doextrun-]
                'compilesrc [-doextcompil- ]
