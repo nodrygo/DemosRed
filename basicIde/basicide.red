@@ -10,7 +10,7 @@ Red [
         }
         Needs:   'view
 ]
-
+context [
 ;-- redefine print is big hack 
 printerr: function [xl] [
     ; print out in -panout-
@@ -325,7 +325,14 @@ try-dodo: func [code /local res  strout ][
 -dolocalrun-: function[][
     either  -codesrc-/text <> none [
                 printerrlf "*******   RUNNING BUFFER  ****"
-                try-dodo  -codesrc-/text
+                code: copy ""
+                codehead: copy "" 
+                parse -codesrc-/text [ copy codehead any[ "RED" any "[" thru  "]"]  copy code to end ]
+                insert code "  context [ "
+                append code "]"
+                insert code codehead
+                ;;;printerrlf code
+                try-dodo  code
             ][
                 printerrlf "WARNING not a Red or Reds file "
             ]
@@ -519,4 +526,4 @@ init
 -calcresize-
 ;view/flags -mainwin- [resize]
 view/no-wait/flags -mainwin- [resize]
-
+]
